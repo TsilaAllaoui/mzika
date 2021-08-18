@@ -1,6 +1,6 @@
 # mzika
 
-A new Flutter project.
+Audio Player Flutter project.
 
 ## Getting Started
 
