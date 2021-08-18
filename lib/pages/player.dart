@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import '/colors/colors.dart' as AppColor;
 
 class Player extends StatefulWidget {
   String filename = '';
@@ -23,27 +24,45 @@ class Player extends StatefulWidget {
 class _PlayerState extends State<Player> {
   bool playing = false;
   IconData currIcon = Icons.play_arrow_outlined;
-  String currTime = "0:00:00";
-  String totalDuration = "0:00:00";
+  String currTimeString = "0:00:00";
+  double currTime = 0;
+  String totalDurationString = "0:00:00";
+  double totalDuration = 0;
+
+  double parseDuration(String s) {
+    double hours = 0;
+    double minutes = 0;
+    double seconds;
+    List<String> parts = s.split(':');
+    if (parts.length > 2) {
+      hours = double.parse(parts[parts.length - 3]) * 120;
+    }
+    if (parts.length > 1) {
+      minutes = double.parse(parts[parts.length - 2]) * 60;
+    }
+    seconds = (double.parse(parts[parts.length - 1]));
+    return hours + minutes + seconds;
+  }
 
   @override
   void initState() {
     playing = true;
     currIcon = Icons.pause_outlined;
-    //widget.player.play(widget.filename, isLocal: true);
+    widget.player.play(widget.filename, isLocal: true);
     widget.player.onDurationChanged.listen((Duration d) {
       setState(() {
         List<String> tmp = d.toString().split(".");
         tmp.removeLast();
-        totalDuration = tmp.last;
+        totalDurationString = tmp.last;
+        totalDuration = parseDuration(totalDurationString);
       });
-      //widget.player.stop();
     });
     widget.player.onAudioPositionChanged.listen((Duration d) {
       setState(() {
         List<String> tmp = d.toString().split(".");
         tmp.removeLast();
-        currTime = tmp.last;
+        currTimeString = tmp.last;
+        currTime = parseDuration(currTimeString);
       });
     });
     super.initState();
@@ -52,6 +71,7 @@ class _PlayerState extends State<Player> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColor.White,
       appBar: AppBar(
         title: Text("Player"),
         centerTitle: true,
@@ -62,7 +82,7 @@ class _PlayerState extends State<Player> {
           },
           icon: Icon(
             Icons.arrow_back_ios,
-            color: Color.fromARGB(255, 187, 187, 191),
+            color: AppColor.Grey,
             size: 35,
           ),
         ),
@@ -73,7 +93,7 @@ class _PlayerState extends State<Player> {
             },
             icon: Icon(
               Icons.bookmark_border_outlined,
-              color: Color.fromARGB(255, 187, 187, 191),
+              color: AppColor.Grey,
               size: 35,
             ),
           ),
@@ -85,7 +105,8 @@ class _PlayerState extends State<Player> {
               },
               icon: Icon(
                 Icons.menu,
-                color: Colors.red,
+                color: AppColor.Grey,
+                size: 40,
               ),
             ),
           )
@@ -99,8 +120,13 @@ class _PlayerState extends State<Player> {
             left: MediaQuery.of(context).size.width / 10,
             right: MediaQuery.of(context).size.width / 10,
             child: Container(
+              child: Icon(
+                Icons.music_note_outlined,
+                color: Colors.white,
+                size: 150,
+              ),
               decoration: BoxDecoration(
-                color: Color.fromARGB(255, 61, 46, 135),
+                color: AppColor.Purple,
                 borderRadius: BorderRadius.circular(25),
               ),
               height: MediaQuery.of(context).size.height * 0.4,
@@ -111,49 +137,91 @@ class _PlayerState extends State<Player> {
           right: MediaQuery.of(context).size.width / 10,
           child: Center(
               child: Column(
-            children: [
-              Text(
-                widget.filename.split("/").last,
-                style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-              ),
-              Text(
-                "No Artist - Composer",
-                style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold),
-              ),
-            ],
-          )),
+                children: [
+                  Text(
+                    widget.filename.split("/").last,
+                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    "No Artist - Composer",
+                    style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ],
+              )),
         ),
         Positioned(
-          top: MediaQuery.of(context).size.height * 0.65,
+          top: MediaQuery.of(context).size.height * 0.6,
+          left: -10,
+          right: -20, // MediaQuery.of(context).size.width / 10,
+          child: Column(
+            children: [
+              Slider(
+                  min: 0,
+                  max: totalDuration,
+                  value: currTime,
+                  activeColor: AppColor.Purple,
+                  inactiveColor: AppColor.Grey,
+                  onChanged: (double n) {
+                    setState(() {
+                      currTime = n;
+                    });
+                  }),
+              Row(
+                children: [
+                  SizedBox(width: 20),
+                  Text(
+                    currTimeString,
+                    style: TextStyle(
+                      color: AppColor.Purple,
+                      fontSize: 15,
+                    ),
+                  ),
+                  SizedBox(width: MediaQuery.of(context).size.width - 120),
+                  Text(
+                    totalDurationString,
+                    style: TextStyle(
+                      color: AppColor.Grey,
+                      fontSize: 15,
+                    ),
+                  ),
+                ],
+              )
+            ],
+          ),
+        ),
+        Positioned(
+          top: MediaQuery.of(context).size.height * 0.68,
           left: 25, //MediaQuery.of(context).size.width / 10,
           right: 35, // MediaQuery.of(context).size.width / 10,
-          child: Center(
+          child: Container(
             child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   IconButton(
                     onPressed: () {},
                     icon: Icon(
-                      Icons.skip_previous_outlined,
-                      color: Colors.black,
+                      Icons.skip_previous_rounded,
+                      color: Colors.grey,
                       size: 50,
                     ),
                   ),
-                  Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white,
+                  IconButton(
+                    onPressed: () {},
+                    icon: Icon(
+                      Icons.fast_rewind_rounded,
+                      color: Colors.grey,
+                      size: 30,
                     ),
+                  ),
+                  Transform.rotate(
+                    angle: 150,
                     child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.rectangle,
-                        color: Colors.deepPurple,
-                      ),
                       child: IconButton(
+                        color: Colors.white,
                         onPressed: () {
                           setState(() {
                             if (!playing)
@@ -162,156 +230,81 @@ class _PlayerState extends State<Player> {
                               widget.player.pause();
                             playing = playing ? false : true;
                             currIcon = playing
-                                ? Icons.pause_outlined
-                                : Icons.play_arrow_outlined;
+                                ? Icons.pause_rounded
+                                : Icons.play_arrow_rounded;
                           });
                         },
-                        iconSize: 100,
-                        icon: Icon(
-                          currIcon,
-                          color: Colors.black,
-                        ),
+                        icon: Transform.rotate(
+                            angle: -150,
+                            child: Icon(
+                              currIcon,
+                            )),
+                        iconSize: 60,
                       ),
+                      decoration: BoxDecoration(
+                        color: AppColor.Purple,
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      height: 75,
+                      width: 75,
                     ),
                   ),
                   IconButton(
                     onPressed: () {},
                     icon: Icon(
-                      Icons.skip_next_outlined,
-                      color: Colors.black,
+                      Icons.fast_forward_rounded,
+                      color: Colors.grey,
+                      size: 30,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () {},
+                    icon: Icon(
+                      Icons.skip_next_rounded,
+                      color: Colors.grey,
                       size: 50,
                     ),
                   ),
                 ]),
           ),
         ),
+        Positioned(
+            top: MediaQuery.of(context).size.height * 0.83,
+            left: 10,
+            right: 10,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                    onPressed: () {
+                      //TODO: Add NightMode
+                    },
+                    icon: Icon(
+                      Icons.nights_stay_rounded,
+                      color: AppColor.Grey,
+                      size: 35,
+                    )),
+                IconButton(
+                    onPressed: () {
+                      //TODO: Add Favorite function
+                    },
+                    icon: Icon(
+                      Icons.favorite_rounded,
+                      color: AppColor.Grey,
+                      size: 35,
+                    )),
+                IconButton(
+                    onPressed: () {
+                      //TODO: Add repeat function
+                    },
+                    icon: Icon(
+                      Icons.repeat_rounded,
+                      color: AppColor.Grey,
+                      size: 35,
+                    ))
+              ],
+            )),
       ]),
     );
   }
 }
-
-/*body: Stack(
-      children: <Widget>[
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          height: MediaQuery.of(context).size.height * 0.87,
-          child: Container(
-            color: Colors.black87,
-          ),
-        ),
-        Positioned(
-          top: 100,
-          left: 50,
-          right: 50,
-          child: Center(
-            child: Text(
-              "${widget.filename.split('/').last}",
-              style: TextStyle(
-                fontSize: 20,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          top: 150,
-          left: 20,
-          right: 20,
-          height: MediaQuery.of(context).size.height * 0.6,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              color: Colors.white,
-            ),
-            child: Icon(
-              Icons.music_note_outlined,
-              color: Colors.black,
-              size: 200,
-            ),
-          ),
-        ),
-        Positioned(
-            top: MediaQuery.of(context).size.height * 0.76,
-            left: 20,
-            right: 20,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('$currTime | $totalDuration',
-                    style: TextStyle(
-                      fontSize: 20,
-                      color: Colors.black,
-                    )),
-              ],
-            )),
-        Positioned(
-          top: MediaQuery.of(context).size.height * 0.85,
-          left: 0,
-          right: 0,
-          height: MediaQuery.of(context).size.height * 0.15,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
-              ),
-              color: Colors.white,
-            ),
-          ),
-        ),
-        Positioned(
-          top: MediaQuery.of(context).size.height * 0.85,
-          left: 0,
-          right: 15,
-          child: Center(
-            child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: <Widget>[
-                  IconButton(
-                    onPressed: () {},
-                    icon: Icon(
-                      Icons.skip_previous_outlined,
-                      color: Colors.black,
-                      size: 50,
-                    ),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white,
-                    ),
-                    child: IconButton(
-                      onPressed: () {
-                        setState(() {
-                          if (!playing)
-                            widget.playMusic();
-                          else
-                            widget.player.pause();
-                          playing = playing ? false : true;
-                          currIcon = playing
-                              ? Icons.pause_outlined
-                              : Icons.play_arrow_outlined;
-                        });
-                      },
-                      iconSize: 100,
-                      icon: Icon(
-                        currIcon,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () {},
-                    icon: Icon(
-                      Icons.skip_next_outlined,
-                      color: Colors.black,
-                      size: 50,
-                    ),
-                  ),
-                ]),
-          ),
-        ),
-      ],
-    )*/
