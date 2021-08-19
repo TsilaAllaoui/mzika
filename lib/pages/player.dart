@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
-import '/colors/colors.dart' as AppColor;
+import 'package:mzika/colors/colors.dart' as AppColor;
 
 class Player extends StatefulWidget {
   String filename = '';
@@ -114,49 +114,42 @@ class _PlayerState extends State<Player> {
         backgroundColor: Colors.white,
         elevation: 0.0,
       ),
-      body: Stack(children: [
-        Positioned(
-            top: 50,
-            left: MediaQuery.of(context).size.width / 10,
-            right: MediaQuery.of(context).size.width / 10,
-            child: Container(
-              child: Icon(
-                Icons.music_note_outlined,
-                color: Colors.white,
-                size: 150,
-              ),
-              decoration: BoxDecoration(
-                color: AppColor.Purple,
-                borderRadius: BorderRadius.circular(25),
-              ),
-              height: MediaQuery.of(context).size.height * 0.4,
-            )),
-        Positioned(
-          top: MediaQuery.of(context).size.height / 2,
-          left: MediaQuery.of(context).size.width / 10,
-          right: MediaQuery.of(context).size.width / 10,
-          child: Center(
+      body: Container(
+        height: MediaQuery.of(context).size.height,
+        child: Column(children: [
+          Container(
+            child: Icon(
+              Icons.music_note_outlined,
+              color: Colors.white,
+              size: 150,
+            ),
+            decoration: BoxDecoration(
+              color: AppColor.Purple,
+              borderRadius: BorderRadius.circular(25),
+            ),
+            height: MediaQuery.of(context).size.height * 0.5,
+            width: MediaQuery.of(context).size.width - 50,
+          ),
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.02,
+          ),
+          Center(
               child: Column(
-                children: [
-                  Text(
-                    widget.filename.split("/").last,
-                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    "No Artist - Composer",
-                    style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ],
-              )),
-        ),
-        Positioned(
-          top: MediaQuery.of(context).size.height * 0.6,
-          left: -10,
-          right: -20, // MediaQuery.of(context).size.width / 10,
-          child: Column(
+            children: [
+              Text(
+                widget.filename.split("/").last,
+                style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                "No Artist - Composer",
+                style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold),
+              ),
+            ],
+          )),
+          Column(
             children: [
               Slider(
                   min: 0,
@@ -167,6 +160,7 @@ class _PlayerState extends State<Player> {
                   onChanged: (double n) {
                     setState(() {
                       currTime = n;
+                      widget.player.seek(Duration(seconds: n.toInt()));
                     });
                   }),
               Row(
@@ -191,87 +185,86 @@ class _PlayerState extends State<Player> {
               )
             ],
           ),
-        ),
-        Positioned(
-          top: MediaQuery.of(context).size.height * 0.68,
-          left: 25, //MediaQuery.of(context).size.width / 10,
-          right: 35, // MediaQuery.of(context).size.width / 10,
-          child: Container(
-            child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  IconButton(
-                    onPressed: () {},
-                    icon: Icon(
-                      Icons.skip_previous_rounded,
-                      color: Colors.grey,
-                      size: 50,
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () {},
-                    icon: Icon(
-                      Icons.fast_rewind_rounded,
-                      color: Colors.grey,
-                      size: 30,
-                    ),
-                  ),
-                  Transform.rotate(
-                    angle: 150,
-                    child: Container(
-                      child: IconButton(
-                        color: Colors.white,
-                        onPressed: () {
-                          setState(() {
-                            if (!playing)
-                              widget.playMusic();
-                            else
-                              widget.player.pause();
-                            playing = playing ? false : true;
-                            currIcon = playing
-                                ? Icons.pause_rounded
-                                : Icons.play_arrow_rounded;
-                          });
-                        },
-                        icon: Transform.rotate(
-                            angle: -150,
-                            child: Icon(
-                              currIcon,
-                            )),
-                        iconSize: 60,
+          Expanded(
+            child: Container(
+              //padding: EdgeInsets.only(bottom: 70),
+              child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: <Widget>[
+                    IconButton(
+                      onPressed: () {},
+                      icon: Icon(
+                        Icons.skip_previous_rounded,
+                        color: Colors.grey,
+                        size: 50,
                       ),
-                      decoration: BoxDecoration(
-                        color: AppColor.Purple,
-                        borderRadius: BorderRadius.circular(15),
+                    ),
+                    IconButton(
+                      onPressed: () {},
+                      icon: Icon(
+                        Icons.fast_rewind_rounded,
+                        color: Colors.grey,
+                        size: 30,
                       ),
-                      height: 75,
-                      width: 75,
                     ),
-                  ),
-                  IconButton(
-                    onPressed: () {},
-                    icon: Icon(
-                      Icons.fast_forward_rounded,
-                      color: Colors.grey,
-                      size: 30,
+                    Transform.rotate(
+                      angle: 150,
+                      child: Container(
+                        child: IconButton(
+                          color: Colors.white,
+                          onPressed: () {
+                            setState(() {
+                              if (!playing)
+                                widget.playMusic();
+                              else
+                                widget.player.pause();
+                              playing = playing ? false : true;
+                              currIcon = playing
+                                  ? Icons.pause_rounded
+                                  : Icons.play_arrow_rounded;
+                            });
+                          },
+                          icon: Transform.rotate(
+                              angle: -150,
+                              child: Icon(
+                                currIcon,
+                              )),
+                          iconSize: 60,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColor.Purple,
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        height: MediaQuery.of(context).size.height * 0.1,
+                        width: MediaQuery.of(context).size.height * 0.1,
+                      ),
                     ),
-                  ),
-                  IconButton(
-                    onPressed: () {},
-                    icon: Icon(
-                      Icons.skip_next_rounded,
-                      color: Colors.grey,
-                      size: 50,
+                    IconButton(
+                      onPressed: () {},
+                      icon: Icon(
+                        Icons.fast_forward_rounded,
+                        color: Colors.grey,
+                        size: 30,
+                      ),
                     ),
-                  ),
-                ]),
+                    IconButton(
+                      onPressed: () {},
+                      icon: Icon(
+                        Icons.skip_next_rounded,
+                        color: Colors.grey,
+                        size: 50,
+                      ),
+                    ),
+                  ]),
+            ),
           ),
-        ),
-        Positioned(
-            top: MediaQuery.of(context).size.height * 0.83,
-            left: 10,
-            right: 10,
+          Padding(
+            padding: const EdgeInsets.only(
+              left: 10,
+              bottom: 15,
+              right: 10,
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -303,8 +296,10 @@ class _PlayerState extends State<Player> {
                       size: 35,
                     ))
               ],
-            )),
-      ]),
+            ),
+          ),
+        ]),
+      ),
     );
   }
 }
