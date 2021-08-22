@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'pages/player.dart';
-import 'pages/home.dart';
+import 'frontend/mzikaplayer.dart';
+import 'frontend/home.dart';
 
 void main() {
   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
@@ -9,6 +9,6 @@ void main() {
   ));
   runApp(MaterialApp(debugShowCheckedModeBanner: false, routes: {
     '/': (context) => Home(),
-    '/player': (context) => Player(''),
+    '/player': (context) => MzikaPlayer(''),
   }));
 }

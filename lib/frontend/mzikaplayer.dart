@@ -1,70 +1,32 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:audioplayers/audioplayers.dart';
-import '/colors/colors.dart' as AppColor;
+import 'package:mzika/frontend/colors/colors.dart' as AppColor;
+import 'package:mzika/backend/player.dart';
 
-class Player extends StatefulWidget {
+class MzikaPlayer extends StatefulWidget {
   String filename = '';
-  AudioPlayer player = AudioPlayer();
-
-  Player(this.filename); //constructor
-
-  void stopMusic() {
-    player.stop();
-  }
-
-  void playMusic() {
-    player.play(filename, isLocal: true);
-  }
+  Player player = Player("");
+  MzikaPlayer(this.filename)
+  {
+    player = Player(filename);
+  } //constructor
 
   @override
-  _PlayerState createState() => _PlayerState();
+  _MzikaPlayerState createState() => _MzikaPlayerState();
 }
 
-class _PlayerState extends State<Player> {
-  bool playing = false;
-  IconData currIcon = Icons.play_arrow_outlined;
-  String currTimeString = "0:00:00";
-  double currTime = 0;
-  String totalDurationString = "0:00:00";
-  double totalDuration = 0;
-
-  double parseDuration(String s) {
-    double hours = 0;
-    double minutes = 0;
-    double seconds;
-    List<String> parts = s.split(':');
-    if (parts.length > 2) {
-      hours = double.parse(parts[parts.length - 3]) * 120;
-    }
-    if (parts.length > 1) {
-      minutes = double.parse(parts[parts.length - 2]) * 60;
-    }
-    seconds = (double.parse(parts[parts.length - 1]));
-    return hours + minutes + seconds;
-  }
+class _MzikaPlayerState extends State<MzikaPlayer> {
+  Player player = Player("");
+  IconData currIcon = Icons.pause_outlined;
 
   @override
   void initState() {
-    playing = true;
+    player = widget.player;
+    player.playing = true;
     currIcon = Icons.pause_outlined;
-    widget.player.play(widget.filename, isLocal: true);
-    widget.player.onDurationChanged.listen((Duration d) {
-      setState(() {
-        List<String> tmp = d.toString().split(".");
-        tmp.removeLast();
-        totalDurationString = tmp.last;
-        totalDuration = parseDuration(totalDurationString);
-      });
-    });
-    widget.player.onAudioPositionChanged.listen((Duration d) {
-      setState(() {
-        List<String> tmp = d.toString().split(".");
-        tmp.removeLast();
-        currTimeString = tmp.last;
-        currTime = parseDuration(currTimeString);
-      });
-    });
+    player.playMusic();
+    this.update();
     super.initState();
   }
 
@@ -77,7 +39,6 @@ class _PlayerState extends State<Player> {
         centerTitle: true,
         leading: IconButton(
           onPressed: () {
-            widget.stopMusic();
             Navigator.pop(context);
           },
           icon: Icon(
@@ -139,7 +100,7 @@ class _PlayerState extends State<Player> {
               child: Column(
                 children: [
                   Text(
-                    widget.filename.split("/").last,
+                    widget.filename.split("/").last.split(".mp3").first,
                     style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
                   ),
                   Text(
@@ -160,20 +121,21 @@ class _PlayerState extends State<Player> {
             children: [
               Slider(
                   min: 0,
-                  max: totalDuration,
-                  value: currTime,
+                  max: player.totalDuration,
+                  value: player.currTime,
                   activeColor: AppColor.Purple,
                   inactiveColor: AppColor.Grey,
                   onChanged: (double n) {
                     setState(() {
-                      currTime = n;
+                      player.currTime = n;
+                      player.player.seek(Duration(seconds: n.toInt()));
                     });
                   }),
               Row(
                 children: [
                   SizedBox(width: 20),
                   Text(
-                    currTimeString,
+                    player.currTimeString,
                     style: TextStyle(
                       color: AppColor.Purple,
                       fontSize: 15,
@@ -181,7 +143,7 @@ class _PlayerState extends State<Player> {
                   ),
                   SizedBox(width: MediaQuery.of(context).size.width - 120),
                   Text(
-                    totalDurationString,
+                    player.totalDurationString,
                     style: TextStyle(
                       color: AppColor.Grey,
                       fontSize: 15,
@@ -210,7 +172,12 @@ class _PlayerState extends State<Player> {
                     ),
                   ),
                   IconButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      setState(() {
+                        player.currTime = player.currTime - 10 < 0 ? 0 : player.currTime - 10;
+                        player.player.seek(Duration(seconds: player.currTime.toInt()));
+                      });
+                    },
                     icon: Icon(
                       Icons.fast_rewind_rounded,
                       color: Colors.grey,
@@ -224,12 +191,12 @@ class _PlayerState extends State<Player> {
                         color: Colors.white,
                         onPressed: () {
                           setState(() {
-                            if (!playing)
-                              widget.playMusic();
+                            if (!player.playing)
+                              player.playMusic();
                             else
-                              widget.player.pause();
-                            playing = playing ? false : true;
-                            currIcon = playing
+                              player.player.pause();
+                            player.playing = player.playing ? false : true;
+                            currIcon = player.playing
                                 ? Icons.pause_rounded
                                 : Icons.play_arrow_rounded;
                           });
@@ -250,7 +217,12 @@ class _PlayerState extends State<Player> {
                     ),
                   ),
                   IconButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      setState(() {
+                        player.currTime = player.currTime + 10 > player.totalDuration ? player.totalDuration : player.currTime + 10;
+                        player.player.seek(Duration(seconds: player.currTime.toInt()));
+                      });
+                    },
                     icon: Icon(
                       Icons.fast_forward_rounded,
                       color: Colors.grey,
@@ -295,11 +267,14 @@ class _PlayerState extends State<Player> {
                     )),
                 IconButton(
                     onPressed: () {
-                      //TODO: Add repeat function
+                      setState(() {
+                        player.repeat ? player.player.setReleaseMode(ReleaseMode.RELEASE) : player.player.setReleaseMode(ReleaseMode.LOOP);
+                        player.repeat = player.repeat ? false : true;
+                      });
                     },
                     icon: Icon(
                       Icons.repeat_rounded,
-                      color: AppColor.Grey,
+                      color: player.repeat ? AppColor.Purple : AppColor.Grey,
                       size: 35,
                     ))
               ],
@@ -307,4 +282,26 @@ class _PlayerState extends State<Player> {
       ]),
     );
   }
+
+  void update()
+  {
+    player.player.onDurationChanged.listen((Duration d) {
+      setState(() {
+        List<String> tmp = d.toString().split(".");
+        tmp.removeLast();
+        player.totalDurationString = tmp.last;
+        player.totalDuration = player.parseDuration(player.totalDurationString);
+      });
+    });
+    player.player.onAudioPositionChanged.listen((Duration d) {
+      setState(() {
+        List<String> tmp = d.toString().split(".");
+        tmp.removeLast();
+        player.currTimeString = tmp.last;
+        player.currTime = player.parseDuration(player.currTimeString);
+      });
+    });
+  }
+
 }
+

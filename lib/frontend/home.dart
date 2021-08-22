@@ -4,7 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_file_manager/flutter_file_manager.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:path_provider_ex/path_provider_ex.dart';
-import 'player.dart';
+import 'package:mzika/frontend/mzikaplayer.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class Home extends StatefulWidget {
@@ -15,25 +15,35 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  Player player = Player("");
+  MzikaPlayer player = MzikaPlayer("");
   var files;
-
+  List<String> musicList = [];
   void getFiles() async {
     if (await Permission.storage.status.isDenied)
       await Permission.storage.request();
 
     List<StorageInfo> storageInfo = await PathProviderEx.getStorageInfo();
-    String root = storageInfo[0].rootDir; //"/storage/emulated/0/Download/" uncomment this because this is for testing
+    String root = storageInfo[0].rootDir;
     var fm = FileManager(root: Directory(root)); //
     files = await fm.filesTree(extensions: ['mp3'] //list only mp3 files
         );
-    setState(() {});
+    if (files != null) {
+      for (int i = 0; i < files.length; i++) {
+        String tmp = await files[i].path
+            .split('/')
+            .last;
+        musicList.add(tmp);
+        print(musicList[i]);
+      }
+    }
+    setState(() {
+    });
   }
 
   @override
   void initState() {
     getFiles();
-    player = Player("");
+    player = MzikaPlayer("");
     super.initState();
   }
 
@@ -70,8 +80,8 @@ class _HomeState extends State<Home> {
                       size: 40,
                     ),
                     onTap: () {
-                      player.stopMusic();
-                      player = Player(files[index].path);
+                      player.player.stopMusic();
+                      player = MzikaPlayer(files[index].path);
                       //Get.to(Player(""));
                       Navigator.push(
                         context,
