@@ -15,9 +15,9 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  MzikaPlayer player = MzikaPlayer("");
-  var files;
   List<String> musicList = [];
+  MzikaPlayer player = MzikaPlayer([], 0);
+  var files;
   void getFiles() async {
     if (await Permission.storage.status.isDenied)
       await Permission.storage.request();
@@ -29,9 +29,7 @@ class _HomeState extends State<Home> {
         );
     if (files != null) {
       for (int i = 0; i < files.length; i++) {
-        String tmp = await files[i].path
-            .split('/')
-            .last;
+        String tmp = await files[i].path;
         musicList.add(tmp);
         print(musicList[i]);
       }
@@ -43,7 +41,7 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     getFiles();
-    player = MzikaPlayer("");
+    player = MzikaPlayer(musicList, 0);
     super.initState();
   }
 
@@ -81,11 +79,12 @@ class _HomeState extends State<Home> {
                     ),
                     onTap: () {
                       player.player.stopMusic();
-                      player = MzikaPlayer(files[index].path);
+                      player = MzikaPlayer(musicList, index);
                       //Get.to(Player(""));
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) {
+                          print(musicList);
                           return player;
                         }),
                       );

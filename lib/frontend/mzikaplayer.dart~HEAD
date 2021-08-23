@@ -1,33 +1,36 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+<<<<<<< HEAD:lib/frontend/mzikaplayer.dart
 import 'package:mzika/frontend/colors/colors.dart' as AppColor;
 import 'package:mzika/backend/player.dart';
+=======
+import 'package:audioplayers/audioplayers.dart';
+import 'package:mzika/colors/colors.dart' as AppColor;
+>>>>>>> ac353d8d869938c549b1dd239958929c8c8ddfee:lib/pages/player.dart
 
 class MzikaPlayer extends StatefulWidget {
-  int index = 0;
-  List<String> musicList = [];
+  String filename = '';
   Player player = Player("");
-  MzikaPlayer(this.musicList, this.index);
+  MzikaPlayer(this.filename)
+  {
+    player = Player(filename);
+  } //constructor
 
   @override
   _MzikaPlayerState createState() => _MzikaPlayerState();
 }
 
 class _MzikaPlayerState extends State<MzikaPlayer> {
-  List<String> musicList = [];
   Player player = Player("");
   IconData currIcon = Icons.pause_outlined;
-  int currMusicIndex = 0;
 
   @override
   void initState() {
-    musicList = widget.musicList;
-    currMusicIndex = widget.index;
     player = widget.player;
     player.playing = true;
     currIcon = Icons.pause_outlined;
-    player.playMusic(musicList[currMusicIndex]);
+    player.playMusic();
     this.update();
     super.initState();
   }
@@ -77,21 +80,40 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
         backgroundColor: Colors.white,
         elevation: 0.0,
       ),
-      body: Stack(children: [
-        Positioned(
-            top: 50,
-            left: MediaQuery.of(context).size.width / 10,
-            right: MediaQuery.of(context).size.width / 10,
-            child: Container(
-              child: Icon(
-                Icons.music_note_outlined,
-                color: Colors.white,
-                size: 150,
+      body: Container(
+        height: MediaQuery.of(context).size.height,
+        child: Column(children: [
+          Container(
+            child: Icon(
+              Icons.music_note_outlined,
+              color: Colors.white,
+              size: 150,
+            ),
+            decoration: BoxDecoration(
+              color: AppColor.Purple,
+              borderRadius: BorderRadius.circular(25),
+            ),
+            height: MediaQuery.of(context).size.height * 0.5,
+            width: MediaQuery.of(context).size.width - 50,
+          ),
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.02,
+          ),
+          Center(
+              child: Column(
+            children: [
+              Text(
+                widget.filename.split("/").last,
+                style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
               ),
-              decoration: BoxDecoration(
-                color: AppColor.Purple,
-                borderRadius: BorderRadius.circular(25),
+              Text(
+                "No Artist - Composer",
+                style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold),
               ),
+<<<<<<< HEAD:lib/frontend/mzikaplayer.dart
               height: MediaQuery.of(context).size.height * 0.4,
             )),
         Positioned(
@@ -102,7 +124,7 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
               child: Column(
                 children: [
                   Text(
-                    musicList[currMusicIndex].split("/").last.split(".mp3").first,
+                    widget.filename.split("/").last.split(".mp3").first,
                     style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
                   ),
                   Text(
@@ -120,6 +142,11 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
           left: -10,
           right: -20, // MediaQuery.of(context).size.width / 10,
           child: Column(
+=======
+            ],
+          )),
+          Column(
+>>>>>>> ac353d8d869938c549b1dd239958929c8c8ddfee:lib/pages/player.dart
             children: [
               Slider(
                   min: 0,
@@ -129,8 +156,13 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
                   inactiveColor: AppColor.Grey,
                   onChanged: (double n) {
                     setState(() {
+<<<<<<< HEAD:lib/frontend/mzikaplayer.dart
                       player.currTime = n;
                       player.player.seek(Duration(seconds: n.toInt()));
+=======
+                      currTime = n;
+                      widget.player.seek(Duration(seconds: n.toInt()));
+>>>>>>> ac353d8d869938c549b1dd239958929c8c8ddfee:lib/pages/player.dart
                     });
                   }),
               Row(
@@ -155,6 +187,7 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
               )
             ],
           ),
+<<<<<<< HEAD:lib/frontend/mzikaplayer.dart
         ),
         Positioned(
           top: MediaQuery.of(context).size.height * 0.68,
@@ -166,15 +199,7 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   IconButton(
-                    onPressed: () {
-                      if (currMusicIndex > 0)
-                        setState(() {
-                          currMusicIndex--;
-                          update();
-                          player.stopMusic();
-                          player.playMusic(musicList[currMusicIndex]);
-                        });
-                    },
+                    onPressed: () {},
                     icon: Icon(
                       Icons.skip_previous_rounded,
                       color: Colors.grey,
@@ -202,7 +227,7 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
                         onPressed: () {
                           setState(() {
                             if (!player.playing)
-                              player.playMusic(musicList[currMusicIndex]);
+                              player.playMusic();
                             else
                               player.player.pause();
                             player.playing = player.playing ? false : true;
@@ -217,14 +242,64 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
                               currIcon,
                             )),
                         iconSize: 60,
+=======
+          Expanded(
+            child: Container(
+              //padding: EdgeInsets.only(bottom: 70),
+              child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: <Widget>[
+                    IconButton(
+                      onPressed: () {},
+                      icon: Icon(
+                        Icons.skip_previous_rounded,
+                        color: Colors.grey,
+                        size: 50,
                       ),
-                      decoration: BoxDecoration(
-                        color: AppColor.Purple,
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      height: 75,
-                      width: 75,
                     ),
+                    IconButton(
+                      onPressed: () {},
+                      icon: Icon(
+                        Icons.fast_rewind_rounded,
+                        color: Colors.grey,
+                        size: 30,
+>>>>>>> ac353d8d869938c549b1dd239958929c8c8ddfee:lib/pages/player.dart
+                      ),
+                    ),
+                    Transform.rotate(
+                      angle: 150,
+                      child: Container(
+                        child: IconButton(
+                          color: Colors.white,
+                          onPressed: () {
+                            setState(() {
+                              if (!playing)
+                                widget.playMusic();
+                              else
+                                widget.player.pause();
+                              playing = playing ? false : true;
+                              currIcon = playing
+                                  ? Icons.pause_rounded
+                                  : Icons.play_arrow_rounded;
+                            });
+                          },
+                          icon: Transform.rotate(
+                              angle: -150,
+                              child: Icon(
+                                currIcon,
+                              )),
+                          iconSize: 60,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColor.Purple,
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        height: MediaQuery.of(context).size.height * 0.1,
+                        width: MediaQuery.of(context).size.height * 0.1,
+                      ),
+                    ),
+<<<<<<< HEAD:lib/frontend/mzikaplayer.dart
                   ),
                   IconButton(
                     onPressed: () {
@@ -237,31 +312,33 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
                       Icons.fast_forward_rounded,
                       color: Colors.grey,
                       size: 30,
+=======
+                    IconButton(
+                      onPressed: () {},
+                      icon: Icon(
+                        Icons.fast_forward_rounded,
+                        color: Colors.grey,
+                        size: 30,
+                      ),
+>>>>>>> ac353d8d869938c549b1dd239958929c8c8ddfee:lib/pages/player.dart
                     ),
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      if (currMusicIndex < musicList.length)
-                        setState(() {
-                          currMusicIndex++;
-                          update();
-                          player.stopMusic();
-                          player.playMusic(musicList[currMusicIndex]);
-                        });
-                    },
-                    icon: Icon(
-                      Icons.skip_next_rounded,
-                      color: Colors.grey,
-                      size: 50,
+                    IconButton(
+                      onPressed: () {},
+                      icon: Icon(
+                        Icons.skip_next_rounded,
+                        color: Colors.grey,
+                        size: 50,
+                      ),
                     ),
-                  ),
-                ]),
+                  ]),
+            ),
           ),
-        ),
-        Positioned(
-            top: MediaQuery.of(context).size.height * 0.83,
-            left: 10,
-            right: 10,
+          Padding(
+            padding: const EdgeInsets.only(
+              left: 10,
+              bottom: 15,
+              right: 10,
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -296,10 +373,13 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
                       size: 35,
                     ))
               ],
-            )),
-      ]),
+            ),
+          ),
+        ]),
+      ),
     );
   }
+<<<<<<< HEAD:lib/frontend/mzikaplayer.dart
 
   void update()
   {
@@ -313,12 +393,6 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
     });
     player.player.onAudioPositionChanged.listen((Duration d) {
       setState(() {
-        if (player.currTime >= player.totalDuration && currMusicIndex < musicList.length) {
-          currMusicIndex++;
-          player.stopMusic();
-          player.playMusic(musicList[currMusicIndex]);
-          return;
-        }
         List<String> tmp = d.toString().split(".");
         tmp.removeLast();
         player.currTimeString = tmp.last;
@@ -329,3 +403,6 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
 
 }
 
+=======
+}
+>>>>>>> ac353d8d869938c549b1dd239958929c8c8ddfee:lib/pages/player.dart

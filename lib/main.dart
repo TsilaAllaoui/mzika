@@ -9,6 +9,6 @@ void main() {
   ));
   runApp(MaterialApp(debugShowCheckedModeBanner: false, routes: {
     '/': (context) => Home(),
-    '/player': (context) => MzikaPlayer(''),
+    '/player': (context) => MzikaPlayer([], 0),
   }));
 }

@@ -16,7 +16,8 @@ class Player {
     player.stop();
   }
 
-  void playMusic() {
+  void playMusic(String _filename) {
+    filename = _filename;
     player.play(filename, isLocal: true);
   }
 
