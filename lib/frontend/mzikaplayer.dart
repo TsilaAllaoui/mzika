@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:mzika/frontend/colors/colors.dart' as app_color;
 import 'package:mzika/backend/player.dart';
+import 'package:flutter/material.dart';
 
+// ignore: must_be_immutable
 class MzikaPlayer extends StatefulWidget {
   int index = 0;
   List<String> musicList = [];
@@ -13,10 +14,38 @@ class MzikaPlayer extends StatefulWidget {
 }
 
 class _MzikaPlayerState extends State<MzikaPlayer> {
+  //Initial state
   List<String> musicList = [];
   Player player = Player("");
   IconData currIcon = Icons.pause_outlined;
   int currMusicIndex = 0;
+
+  // To update Slider and time on change
+  void update() {
+    player.player.onDurationChanged.listen((Duration d) {
+      setState(() {
+        List<String> tmp = d.toString().split(".");
+        tmp.removeLast();
+        player.totalDurationString = tmp.last;
+        player.totalDuration = player.parseDuration(player.totalDurationString);
+      });
+    });
+    player.player.onPositionChanged.listen((Duration d) {
+      setState(() {
+        if (player.currTime >= player.totalDuration &&
+            currMusicIndex < musicList.length) {
+          currMusicIndex++;
+          player.stopMusic();
+          player.playMusic(musicList[currMusicIndex]);
+          return;
+        }
+        List<String> tmp = d.toString().split(".");
+        tmp.removeLast();
+        player.currTimeString = tmp.last;
+        player.currTime = player.parseDuration(player.currTimeString);
+      });
+    });
+  }
 
   @override
   void initState() {
@@ -35,40 +64,25 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
     return Scaffold(
       backgroundColor: app_color.white,
       appBar: AppBar(
-        title: Text("Player"),
+        title: const Text("Player"),
         centerTitle: true,
         leading: IconButton(
           onPressed: () {
             Navigator.pop(context);
           },
-          icon: Icon(
-            Icons.arrow_back_ios,
-            color: app_color.grey,
+          icon: const Icon(
+            Icons.arrow_back_outlined,
+            color: Color.fromARGB(255, 0, 0, 0),
             size: 35,
           ),
         ),
         actions: [
-          IconButton(
-            onPressed: () {
-              //TODO: Add search function
-            },
-            icon: Icon(
-              Icons.bookmark_border_outlined,
-              color: app_color.grey,
-              size: 35,
-            ),
-          ),
           Container(
-            padding: EdgeInsets.only(right: 3),
-            child: IconButton(
-              onPressed: () {
-                //TODO: Add menu function
-              },
-              icon: Icon(
-                Icons.menu,
-                color: app_color.grey,
-                size: 40,
-              ),
+            margin: const EdgeInsets.fromLTRB(0, 0, 15, 0),
+            child: const Icon(
+              Icons.favorite,
+              color: Colors.black,
+              size: 35,
             ),
           )
         ],
@@ -81,37 +95,41 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
             left: MediaQuery.of(context).size.width / 10,
             right: MediaQuery.of(context).size.width / 10,
             child: Container(
-              child: Icon(
-                Icons.music_note_outlined,
-                color: Colors.white,
-                size: 150,
-              ),
               decoration: BoxDecoration(
                 color: app_color.purple,
                 borderRadius: BorderRadius.circular(25),
               ),
               height: MediaQuery.of(context).size.height * 0.4,
+              child: const Icon(
+                Icons.music_note_outlined,
+                color: Colors.white,
+                size: 150,
+              ),
             )),
         Positioned(
           top: MediaQuery.of(context).size.height / 2,
-          left: MediaQuery.of(context).size.width / 10,
-          right: MediaQuery.of(context).size.width / 10,
-          child: Center(
-              child: Column(
-                children: [
-                  Text(
-                    musicList[currMusicIndex].split("/").last.split(".mp3").first,
-                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    "No Artist - Composer",
-                    style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ],
-              )),
+          left: MediaQuery.of(context).size.width / 25,
+          // right: MediaQuery.of(context).size.width / 10,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Text(
+                musicList[currMusicIndex].split("/").last.split(".mp3").first,
+                style: const TextStyle(
+                    fontSize: 27,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black),
+                textAlign: TextAlign.left,
+              ),
+              const Text(
+                "No Artist - Composer",
+                style: TextStyle(
+                    color: Color.fromARGB(255, 14, 13, 13),
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
         ),
         Positioned(
           top: MediaQuery.of(context).size.height * 0.6,
@@ -133,10 +151,10 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
                   }),
               Row(
                 children: [
-                  SizedBox(width: 20),
+                  const SizedBox(width: 20),
                   Text(
                     player.currTimeString,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: app_color.purple,
                       fontSize: 15,
                     ),
@@ -144,7 +162,7 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
                   SizedBox(width: MediaQuery.of(context).size.width - 120),
                   Text(
                     player.totalDurationString,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: app_color.grey,
                       fontSize: 15,
                     ),
@@ -165,15 +183,16 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
                 children: <Widget>[
                   IconButton(
                     onPressed: () {
-                      if (currMusicIndex > 0)
+                      if (currMusicIndex > 0) {
                         setState(() {
                           currMusicIndex--;
                           update();
                           player.stopMusic();
                           player.playMusic(musicList[currMusicIndex]);
                         });
+                      }
                     },
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.skip_previous_rounded,
                       color: Colors.grey,
                       size: 50,
@@ -182,11 +201,13 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
                   IconButton(
                     onPressed: () {
                       setState(() {
-                        player.currTime = player.currTime - 10 < 0 ? 0 : player.currTime - 10;
-                        player.player.seek(Duration(seconds: player.currTime.toInt()));
+                        player.currTime =
+                            player.currTime - 10 < 0 ? 0 : player.currTime - 10;
+                        player.player
+                            .seek(Duration(seconds: player.currTime.toInt()));
                       });
                     },
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.fast_rewind_rounded,
                       color: Colors.grey,
                       size: 30,
@@ -195,14 +216,19 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
                   Transform.rotate(
                     angle: 150,
                     child: Container(
+                      decoration: BoxDecoration(
+                        color: app_color.purple,
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      height: 75,
+                      width: 75,
                       child: IconButton(
                         color: Colors.white,
                         onPressed: () {
                           setState(() {
-                            if (!player.playing)
-                              player.playMusic(musicList[currMusicIndex]);
-                            else
-                              player.player.pause();
+                            player.playing
+                                ? player.player.pause()
+                                : player.player.resume();
                             player.playing = player.playing ? false : true;
                             currIcon = player.playing
                                 ? Icons.pause_rounded
@@ -216,22 +242,20 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
                             )),
                         iconSize: 60,
                       ),
-                      decoration: BoxDecoration(
-                        color: app_color.purple,
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      height: 75,
-                      width: 75,
                     ),
                   ),
                   IconButton(
                     onPressed: () {
                       setState(() {
-                        player.currTime = player.currTime + 10 > player.totalDuration ? player.totalDuration : player.currTime + 10;
-                        player.player.seek(Duration(seconds: player.currTime.toInt()));
+                        player.currTime =
+                            player.currTime + 10 > player.totalDuration
+                                ? player.totalDuration
+                                : player.currTime + 10;
+                        player.player
+                            .seek(Duration(seconds: player.currTime.toInt()));
                       });
                     },
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.fast_forward_rounded,
                       color: Colors.grey,
                       size: 30,
@@ -239,15 +263,18 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
                   ),
                   IconButton(
                     onPressed: () {
-                      if (currMusicIndex < musicList.length)
+                      if (currMusicIndex < musicList.length) {
                         setState(() {
                           currMusicIndex++;
                           update();
                           player.stopMusic();
+                          String a = musicList[currMusicIndex];
+                          print("In mzikplayer: $a");
                           player.playMusic(musicList[currMusicIndex]);
                         });
+                      }
                     },
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.skip_next_rounded,
                       color: Colors.grey,
                       size: 50,
@@ -267,7 +294,7 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
                     onPressed: () {
                       //TODO: Add NightMode
                     },
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.nights_stay_rounded,
                       color: app_color.grey,
                       size: 35,
@@ -276,7 +303,7 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
                     onPressed: () {
                       //TODO: Add Favorite function
                     },
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.favorite_rounded,
                       color: app_color.grey,
                       size: 35,
@@ -298,32 +325,4 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
       ]),
     );
   }
-
-  void update()
-  {
-    player.player.onDurationChanged.listen((Duration d) {
-      setState(() {
-        List<String> tmp = d.toString().split(".");
-        tmp.removeLast();
-        player.totalDurationString = tmp.last;
-        player.totalDuration = player.parseDuration(player.totalDurationString);
-      });
-    });
-    // player.player.onAudioPositionChanged.listen((Duration d) {
-    //   setState(() {
-    //     if (player.currTime >= player.totalDuration && currMusicIndex < musicList.length) {
-    //       currMusicIndex++;
-    //       player.stopMusic();
-    //       player.playMusic(musicList[currMusicIndex]);
-    //       return;
-    //     }
-    //     List<String> tmp = d.toString().split(".");
-    //     tmp.removeLast();
-    //     player.currTimeString = tmp.last;
-    //     player.currTime = player.parseDuration(player.currTimeString);
-    //   });
-    // });
-  }
-
 }
-

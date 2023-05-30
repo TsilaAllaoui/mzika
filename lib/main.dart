@@ -9,11 +9,8 @@ void main() {
       statusBarColor: Color.fromARGB(255, 62, 43, 190),
     ),
   );
-  runApp(
-      MaterialApp(
-          debugShowCheckedModeBanner: false,
-          routes: {
-            '/': (context) => Home(),
-            '/player': (context) => MzikaPlayer([], 0),
+  runApp(MaterialApp(debugShowCheckedModeBanner: false, routes: {
+    '/': (context) => const Home(),
+    '/player': (context) => MzikaPlayer(const [], 0),
   }));
 }

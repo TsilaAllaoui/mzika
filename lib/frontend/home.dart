@@ -1,54 +1,56 @@
-import 'dart:ffi';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
-import 'package:file_manager/file_manager.dart';
+import 'package:mzika/frontend/mzikaplayer.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:path_provider_ex2/path_provider_ex2.dart';
-import 'package:mzika/frontend/mzikaplayer.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:path_provider/path_provider.dart';
 
 class Home extends StatefulWidget {
+  const Home({super.key});
+
   @override
-  State<StatefulWidget> createState() {
+  State<Home> createState() {
     return _HomeState(); //create state
   }
 }
 
 class _HomeState extends State<Home> {
+  // Initial state of the widget
   List<String> musicList = [];
-  MzikaPlayer player = MzikaPlayer([], 0);
+  MzikaPlayer player = MzikaPlayer(const [], 0);
   List<String> files = [];
 
+  // For getting all audio files
   void getFilesList() async {
+    // Requesting storage permission if not enabled
     var status = await Permission.storage.status;
     if (status.isDenied) {
-      Permission.storage.request();
+      await Permission.storage.request();
     }
+    // Getting storage list adn root internal directory
     List<StorageInfo> storageInfo = await PathProviderEx2.getStorageInfo();
     var internaleStoragePath = storageInfo[0].rootDir;
-    print("Root Path: $internaleStoragePath");
     Directory dir = Directory(internaleStoragePath);
-    List<FileSystemEntity> files_ = dir.listSync(recursive: true, followLinks: false);
-    for (var entity in files_)
-    {
-      String file = entity.toString();
+    // Getting all files
+    List<FileSystemEntity> files_ =
+        dir.listSync(recursive: true, followLinks: false);
+
+    // Filtering by mp3 extension // TODO: add more audio extension support
+    for (var entity in files_) {
+      String file = entity.path;
       if (file.contains(".mp3")) {
+        musicList.add(file);
+        print(file);
         file = file.split('/').last;
         files.add(file);
-        musicList.add(file);
       }
     }
   }
 
-
-
+  // Get audio files and update state
   void getFiles() async {
     getFilesList();
-    setState(() {
-    });
+    setState(() {});
   }
 
   @override
@@ -61,31 +63,42 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Color.fromARGB(255, 235, 235, 235),
+        backgroundColor: const Color.fromARGB(255, 235, 235, 235),
         appBar: AppBar(
-          title: Text("Mzika"),
+          title: const Text("Mzika"),
           centerTitle: true,
-          backgroundColor: Color.fromARGB(255, 62, 43, 190),
+          backgroundColor: const Color.fromARGB(255, 62, 43, 190),
         ),
-        body: files == null
-            ? Center(
-              child: SpinKitCubeGrid(
-                  color: Color.fromARGB(255, 62, 43, 190),
-                  size: 20,
-                ),
-            )
+        body: files.isEmpty
+            ? const Center(
+                child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SpinKitCubeGrid(
+                    color: Color.fromARGB(255, 62, 43, 190),
+                    size: 20,
+                  ),
+                  SizedBox(
+                    height: 25,
+                  ),
+                  Text(
+                    "Scanning storage...",
+                    style: TextStyle(fontSize: 15),
+                  )
+                ],
+              ))
             : ListView.builder(
-                itemCount: files?.length ?? 0,
+                itemCount: files.length,
                 itemBuilder: (context, index) {
                   return Card(
                       child: ListTile(
                     title: Text(files[index]),
-                    leading: Icon(
+                    leading: const Icon(
                       Icons.audiotrack_outlined,
                       color: Color.fromARGB(255, 62, 43, 190),
                       size: 40,
                     ),
-                    trailing: Icon(
+                    trailing: const Icon(
                       Icons.play_arrow,
                       color: Color.fromARGB(255, 61, 46, 135),
                       size: 40,
@@ -93,11 +106,9 @@ class _HomeState extends State<Home> {
                     onTap: () {
                       player.player.stopMusic();
                       player = MzikaPlayer(musicList, index);
-                      //Get.to(Player(""));
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) {
-                          print(musicList);
                           return player;
                         }),
                       );
