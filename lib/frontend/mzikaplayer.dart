@@ -108,10 +108,10 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
             )),
         Positioned(
           top: MediaQuery.of(context).size.height / 2,
-          left: MediaQuery.of(context).size.width / 25,
-          // right: MediaQuery.of(context).size.width / 10,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
+          left: MediaQuery.of(context).size.width / 10,
+          right: MediaQuery.of(context).size.width / 10,
+          child: Center(
+              child: Column(
             children: [
               Text(
                 musicList[currMusicIndex].split("/").last.split(".mp3").first,
@@ -119,7 +119,6 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
                     fontSize: 27,
                     fontWeight: FontWeight.bold,
                     color: Colors.black),
-                textAlign: TextAlign.left,
               ),
               const Text(
                 "No Artist - Composer",
@@ -129,7 +128,7 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
                     fontWeight: FontWeight.bold),
               ),
             ],
-          ),
+          )),
         ),
         Positioned(
           top: MediaQuery.of(context).size.height * 0.6,
