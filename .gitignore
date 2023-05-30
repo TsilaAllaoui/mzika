@@ -1,0 +1,8 @@
+*
+!.gitignore
+!lib/
+!.flutter-plugins
+!.flutter-plugins-dependencies
+!*.yaml
+!*.lock
+!*.md
