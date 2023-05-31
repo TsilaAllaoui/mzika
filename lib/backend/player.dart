@@ -9,23 +9,31 @@ class Player {
   double currTime = 0;
   String totalDurationString = "0:00:00";
   double totalDuration = 0;
+  DeviceFileSource? source;
 
   //constructor
   Player(this.filename);
 
-  void setSource() {
-
+  // Setting file source
+  void setSource(String file) {
+    source = DeviceFileSource(file);
   }
 
-
   // To play music
-  void playMusic(String filename_) async {
-    player.play(DeviceFileSource(filename_));
+  void playMusic() {
+    player.play(source as Source);
   }
 
   // To stop current music
   void stopMusic() {
     player.stop();
+  }
+
+  // Reset current file
+  void resetMusic() {
+    player.seek(const Duration(seconds: 0));
+    currTime = 0;
+    currTimeString = const Duration(seconds: 0).toString().split('.').first;
   }
 
   // To parse duration

@@ -42,24 +42,28 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
     });
     player.player.onPositionChanged.listen((Duration d) {
       setState(() {
-        if (player.currTime >= player.totalDuration &&
-            currMusicIndex < musicList.length) {
-          if (player.currTime >= player.totalDuration && repeatStatus != repeateState.off) {
-            player.player.seek(const Duration(seconds: 0));
-            player.currTime = 0;
+
+        if (player.currTime >= player.totalDuration - 1)
+        {
+          if (currMusicIndex < musicList.length - 1) {
+            currMusicIndex++;
+            player.setSource(musicList[currMusicIndex]);
+            var a = player.source?.path;
+            print("Changed to $a");
+            player.resetMusic();
+            player.playMusic();
+            return;
           }
-          else {
-          currMusicIndex++;
-          player.stopMusic();
-          player.player.setSourceDeviceFile(musicList[currMusicIndex]);
-          var d = player.player.getDuration();
-          var filename = musicList[currMusicIndex];
-          print("Duration of $filename: $d");
-          player.currTime = 0;
-          player.player.seek(const Duration(seconds: 0));
-          player.playMusic(musicList[currMusicIndex]);
-          return;
+          if (currMusicIndex == musicList.length - 1) {
+            setState(() {
+              player.playing = false;
+              currIcon = Icons.play_arrow_rounded;
+              player.resetMusic();
+              print('LAST************');
+              return;
+            });
           }
+          player.resetMusic();
         }
         List<String> tmp = d.toString().split(".");
         tmp.removeLast();
@@ -67,6 +71,9 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
         player.currTime = player.parseDuration(player.currTimeString);
       });
     });
+    // player.player.onPlayerComplete.listen((event) {
+    //
+    // });
   }
 
   // To change random mode
@@ -108,152 +115,167 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
     player = widget.player;
     player.playing = true;
     currIcon = Icons.pause_outlined;
-    player.playMusic(musicList[currMusicIndex]);
+    player.setSource(musicList[currMusicIndex]);
+    player.playMusic();
     update();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: app_color.white,
-      appBar: AppBar(
-        title: const Text("Player"),
-        centerTitle: true,
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: const Icon(
-            Icons.arrow_back_outlined,
-            color: Color.fromARGB(255, 0, 0, 0),
-            size: 35,
-          ),
-        ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.fromLTRB(0, 0, 15, 0),
-            height: 50,
-            child: const Icon(
-              Icons.favorite,
-              color: Colors.black,
+    return WillPopScope(
+      onWillPop: () {
+        player.player.stop();
+        player.player.release();
+        Navigator.pop(context);
+        return Future.value(false);
+      },
+      child: Scaffold(
+        backgroundColor: app_color.white,
+        appBar: AppBar(
+          title: const Text("Player"),
+          centerTitle: true,
+          leading: IconButton(
+            onPressed: () {
+              player.player.stop();
+              player.player.release();
+              Navigator.pop(context);
+            },
+            icon: const Icon(
+              Icons.arrow_back_outlined,
+              color: Color.fromARGB(255, 0, 0, 0),
               size: 35,
             ),
-          )
-        ],
-        backgroundColor: Colors.white,
-        elevation: 0.0,
-      ),
-      body: Stack(children: [
-        Positioned(
-            top: 10,
-            child: Container(
-              margin: const EdgeInsets.all(10),
-              width: MediaQuery.of(context).size.width - 20,
-              height: MediaQuery.of(context).size.height * 0.45,
-              decoration: BoxDecoration(
-                color: app_color.purple,
-                borderRadius: BorderRadius.circular(25),
-              ),
+          ),
+          actions: [
+            Container(
+              margin: const EdgeInsets.fromLTRB(0, 0, 15, 0),
+              height: 50,
               child: const Icon(
-                Icons.music_note_outlined,
-                color: Colors.white,
-                size: 150,
+                Icons.favorite,
+                color: Colors.black,
+                size: 35,
               ),
-            )),
-        Positioned(
-          top: MediaQuery.of(context).size.height / 2,
-          left: 10,
-          child: Align(
+            )
+          ],
+          backgroundColor: Colors.white,
+          elevation: 0.0,
+        ),
+        body: Stack(children: [
+          Positioned(
+              top: 10,
+              child: Container(
+                margin: const EdgeInsets.all(10),
+                width: MediaQuery.of(context).size.width - 20,
+                height: MediaQuery.of(context).size.height * 0.45,
+                decoration: BoxDecoration(
+                  color: app_color.purple,
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                child: const Icon(
+                  Icons.music_note_outlined,
+                  color: Colors.white,
+                  size: 150,
+                ),
+              )),
+          Positioned(
+            top: MediaQuery.of(context).size.height / 2,
+            left: 10,
+            child: Align(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    musicList[currMusicIndex].split("/").last.split(".mp3").first,
+                    style: const TextStyle(
+                        fontSize: 27,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black),
+                  ),
+                  const Text(
+                    "No Artist - Composer",
+                    style: TextStyle(
+                        color: Color.fromARGB(255, 14, 13, 13),
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            top: MediaQuery.of(context).size.height * 0.6,
+            width: MediaQuery.of(context).size.width,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  musicList[currMusicIndex].split("/").last.split(".mp3").first,
-                  style: const TextStyle(
-                      fontSize: 27,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black),
-                ),
-                const Text(
-                  "No Artist - Composer",
-                  style: TextStyle(
-                      color: Color.fromARGB(255, 14, 13, 13),
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold),
-                ),
+                Slider(
+                    min: 0,
+                    max: player.totalDuration + 1,
+                    value: player.currTime,
+                    activeColor: app_color.purple,
+                    inactiveColor: app_color.grey,
+                    onChanged: (double n) {
+                      setState(() {
+                        player.currTime = n;
+                        player.player.seek(Duration(seconds: n.toInt()));
+                        Duration d = Duration(seconds: n.toInt());
+                        player.currTimeString = d.toString().split('.').first;
+                      });
+                    }),
+                Container(
+                  margin: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        player.currTimeString,
+                        style: const TextStyle(
+                          color: app_color.purple,
+                          fontSize: 15,
+                        ),
+                      ),
+                      Text(
+                        player.totalDurationString,
+                        style: const TextStyle(
+                          color: app_color.grey,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
               ],
             ),
           ),
-        ),
-        Positioned(
-          top: MediaQuery.of(context).size.height * 0.6,
-          left: -10,
-          right: -20, // MediaQuery.of(context).size.width / 10,
-          child: Column(
-            children: [
-              Slider(
-                  min: 0,
-                  max: player.totalDuration,
-                  value: player.currTime,
-                  activeColor: app_color.purple,
-                  inactiveColor: app_color.grey,
-                  onChanged: (double n) {
-                    setState(() {
-                      player.currTime = n;
-                      player.player.seek(Duration(seconds: n.toInt()));
-                    });
-                  }),
-              Row(
-                children: [
-                  const SizedBox(width: 20),
-                  Text(
-                    player.currTimeString,
-                    style: const TextStyle(
-                      color: app_color.purple,
-                      fontSize: 15,
-                    ),
-                  ),
-                  SizedBox(width: MediaQuery.of(context).size.width - 120),
-                  Text(
-                    player.totalDurationString,
-                    style: const TextStyle(
-                      color: app_color.grey,
-                      fontSize: 15,
-                    ),
-                  ),
-                ],
-              )
-            ],
-          ),
-        ),
-        Positioned(
-          top: MediaQuery.of(context).size.height * 0.68,
-          left: 25, //MediaQuery.of(context).size.width / 10,
-          right: 35, // MediaQuery.of(context).size.width / 10,
-          child: Container(
+          Positioned(
+            top: MediaQuery.of(context).size.height * 0.68,
+            left: 25, //MediaQuery.of(context).size.width / 10,
+            right: 35, // MediaQuery.of(context).size.width / 10,
             child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   IconButton(
+                    splashColor: Colors.transparent,
                     onPressed: () {
                       if (currMusicIndex > 0) {
                         setState(() {
                           currMusicIndex--;
                           update();
                           player.stopMusic();
-                          player.playMusic(musicList[currMusicIndex]);
+                          player.setSource(musicList[currMusicIndex]);
+                          player.playMusic();
                         });
                       }
                     },
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.skip_previous_rounded,
-                      color: Colors.grey,
+                      color: (currMusicIndex != 0) ? Colors.black : Colors.grey.shade400,
                       size: 50,
                     ),
                   ),
                   IconButton(
+                    splashColor: Colors.transparent,
                     onPressed: () {
                       setState(() {
                         player.currTime =
@@ -278,6 +300,7 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
                       height: 75,
                       width: 75,
                       child: IconButton(
+                        splashColor: Colors.transparent,
                         color: Colors.white,
                         onPressed: () {
                           setState(() {
@@ -300,6 +323,7 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
                     ),
                   ),
                   IconButton(
+                    splashColor: Colors.transparent,
                     onPressed: () {
                       setState(() {
                         player.currTime =
@@ -317,95 +341,101 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
                     ),
                   ),
                   IconButton(
+                    splashColor: Colors.transparent,
                     onPressed: () {
-                      if (currMusicIndex < musicList.length) {
+                      if (currMusicIndex < musicList.length - 1) {
                         setState(() {
-                          currMusicIndex++;
-                          update();
-                          player.stopMusic();
-                          String a = musicList[currMusicIndex];
-                          print("In mzikplayer: $a");
-                          player.playMusic(musicList[currMusicIndex]);
+                          if (currMusicIndex < musicList.length - 1) {
+                            currMusicIndex++;
+                            player.setSource(musicList[currMusicIndex]);
+                          }
+                          player.resetMusic();
+                          player.playMusic();
                         });
                       }
                     },
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.skip_next_rounded,
-                      color: Colors.grey,
+                      color: (currMusicIndex != musicList.length - 1) ? Colors.black : Colors.grey.shade400,
                       size: 50,
                     ),
                   ),
                 ]),
           ),
-        ),
-        Positioned(
-            top: MediaQuery.of(context).size.height * 0.83,
-            left: 10,
-            right: 10,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                    onPressed: () {
-                      //TODO: Add NightMode
-                    },
-                    icon: const Icon(
-                      Icons.nights_stay_rounded,
-                      color: app_color.grey,
-                      size: 35,
-                    )),
-                IconButton(
-                    onPressed: () {
-                      //TODO: Add Favorite function
-                    },
-                    icon: const Icon(
-                      Icons.favorite_rounded,
-                      color: app_color.grey,
-                      size: 35,
-                    )),
-                IconButton(
-                    onPressed: () {
-                      setState(() {
-                        // player.repeat ? player.player.setReleaseMode(ReleaseMode.RELEASE) : player.player.setReleaseMode(ReleaseMode.LOOP);
-                        player.repeat = player.repeat ? false : true;
-                      });
-                    },
+          Positioned(
+              top: MediaQuery.of(context).size.height * 0.83,
+              left: 10,
+              right: 10,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                      splashColor: Colors.transparent,
+                      onPressed: () {
+                        //TODO: Add NightMode
+                      },
+                      icon: const Icon(
+                        Icons.nights_stay_rounded,
+                        color: app_color.grey,
+                        size: 35,
+                      )),
+                  IconButton(
+                      splashColor: Colors.transparent,
+                      onPressed: () {
+                        //TODO: Add Favorite function
+                      },
+                      icon: const Icon(
+                        Icons.favorite_rounded,
+                        color: app_color.grey,
+                        size: 35,
+                      )),
+                  IconButton(
+                      splashColor: Colors.transparent,
+                      onPressed: () {
+                        setState(() {
+                          // player.repeat ? player.player.setReleaseMode(ReleaseMode.RELEASE) : player.player.setReleaseMode(ReleaseMode.LOOP);
+                          player.repeat = player.repeat ? false : true;
+                        });
+                      },
+                      icon: Icon(
+                        Icons.repeat_rounded,
+                        color: player.repeat ? app_color.purple : app_color.grey,
+                        size: 35,
+                      ))
+                ],
+              )),
+          Positioned(
+            top: MediaQuery.of(context).size.height * 0.79,
+            width: MediaQuery.of(context).size.width,
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    splashColor: Colors.transparent,
                     icon: Icon(
-                      Icons.repeat_rounded,
-                      color: player.repeat ? app_color.purple : app_color.grey,
+                      repeatIcon,
+                      color: Colors.black,
                       size: 35,
-                    ))
-              ],
-            )),
-        Positioned(
-          top: MediaQuery.of(context).size.height * 0.79,
-          width: MediaQuery.of(context).size.width,
-          child: Container(
-            margin: const EdgeInsets.fromLTRB(15, 0, 15, 0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: Icon(
-                    repeatIcon,
-                    color: Colors.black,
-                    size: 35,
+                    ),
+                    onPressed: toggleRepeat,
                   ),
-                  onPressed: toggleRepeat,
-                ),
-                IconButton(
-                  icon: Icon(
-                    randomIcon,
-                    color: Colors.black,
-                    size: 35,
+                  IconButton(
+                    splashColor: Colors.transparent,
+                    icon: Icon(
+                      randomIcon,
+                      color: Colors.black,
+                      size: 35,
+                    ),
+                    onPressed: toggleRandom,
                   ),
-                  onPressed: toggleRandom,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-      ]),
+        ]),
+      ),
     );
   }
 }

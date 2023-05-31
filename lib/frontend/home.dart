@@ -4,6 +4,7 @@ import 'package:mzika/frontend/mzikaplayer.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:path_provider_ex2/path_provider_ex2.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_media_metadata/flutter_media_metadata.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -104,14 +105,19 @@ class _HomeState extends State<Home> {
                       size: 40,
                     ),
                     onTap: () {
-                      player.player.stopMusic();
-                      player = MzikaPlayer(musicList, index);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) {
-                          return player;
-                        }),
-                      );
+                      MetadataRetriever.fromFile(File(musicList[index])).then((value) => {
+                    print(value);
+                    player.player.stopMusic();
+                  player = MzikaPlayer(musicList, index);
+                  Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) {
+                  return player;
+                  }),
+                  );
+                      });
+                    }
+
                     },
                   ));
                 },
