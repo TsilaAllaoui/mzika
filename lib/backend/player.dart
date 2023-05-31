@@ -10,7 +10,13 @@ class Player {
   String totalDurationString = "0:00:00";
   double totalDuration = 0;
 
-  Player(this.filename); //constructor
+  //constructor
+  Player(this.filename);
+
+  void setSource() {
+
+  }
+
 
   // To play music
   void playMusic(String filename_) async {
@@ -22,7 +28,7 @@ class Player {
     player.stop();
   }
 
-  // to parse duration
+  // To parse duration
   double parseDuration(String s) {
     double hours = 0;
     double minutes = 0;

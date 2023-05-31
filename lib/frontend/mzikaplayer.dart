@@ -1,12 +1,16 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:mzika/frontend/colors/colors.dart' as app_color;
 import 'package:mzika/backend/player.dart';
 import 'package:flutter/material.dart';
+
+enum repeateState {off, one, all}
 
 // ignore: must_be_immutable
 class MzikaPlayer extends StatefulWidget {
   int index = 0;
   List<String> musicList = [];
   Player player = Player("");
+
   MzikaPlayer(this.musicList, this.index, {super.key});
 
   @override
@@ -19,6 +23,12 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
   Player player = Player("");
   IconData currIcon = Icons.pause_outlined;
   int currMusicIndex = 0;
+  var repeatStatus = repeateState.off;
+  bool randomOn = false;
+
+  // Icons
+  IconData repeatIcon = Icons.repeat_outlined;
+  IconData randomIcon = Icons.shuffle_outlined;
 
   // To update Slider and time on change
   void update() {
@@ -34,16 +44,60 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
       setState(() {
         if (player.currTime >= player.totalDuration &&
             currMusicIndex < musicList.length) {
+          if (player.currTime >= player.totalDuration && repeatStatus != repeateState.off) {
+            player.player.seek(const Duration(seconds: 0));
+            player.currTime = 0;
+          }
+          else {
           currMusicIndex++;
           player.stopMusic();
+          player.player.setSourceDeviceFile(musicList[currMusicIndex]);
+          var d = player.player.getDuration();
+          var filename = musicList[currMusicIndex];
+          print("Duration of $filename: $d");
+          player.currTime = 0;
+          player.player.seek(const Duration(seconds: 0));
           player.playMusic(musicList[currMusicIndex]);
           return;
+          }
         }
         List<String> tmp = d.toString().split(".");
         tmp.removeLast();
         player.currTimeString = tmp.last;
         player.currTime = player.parseDuration(player.currTimeString);
       });
+    });
+  }
+
+  // To change random mode
+  void toggleRandom() {
+    setState(() {
+      randomIcon = randomOn ? Icons.shuffle_on_outlined : Icons.shuffle_outlined;
+      randomOn = !randomOn;
+    });
+  }
+
+  // To change repeat mode
+  void toggleRepeat() {
+    setState(() {
+      if (repeatStatus == repeateState.off)
+      {
+        repeatIcon = Icons.repeat_one_on_outlined;
+        repeatStatus = repeateState.one;
+        player.player.setReleaseMode(ReleaseMode.loop);
+      }
+      else if (repeatStatus == repeateState.one)
+      {
+        repeatIcon = Icons.repeat_on_outlined;
+        repeatStatus = repeateState.all;
+        player.player.setReleaseMode(ReleaseMode.loop);
+      }
+      else
+      {
+        repeatIcon = Icons.repeat_outlined;
+        repeatStatus = repeateState.off;
+        player.player.setReleaseMode(ReleaseMode.stop);
+      }
     });
   }
 
@@ -79,6 +133,7 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
         actions: [
           Container(
             margin: const EdgeInsets.fromLTRB(0, 0, 15, 0),
+            height: 50,
             child: const Icon(
               Icons.favorite,
               color: Colors.black,
@@ -91,15 +146,15 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
       ),
       body: Stack(children: [
         Positioned(
-            top: 50,
-            left: MediaQuery.of(context).size.width / 10,
-            right: MediaQuery.of(context).size.width / 10,
+            top: 10,
             child: Container(
+              margin: const EdgeInsets.all(10),
+              width: MediaQuery.of(context).size.width - 20,
+              height: MediaQuery.of(context).size.height * 0.45,
               decoration: BoxDecoration(
                 color: app_color.purple,
                 borderRadius: BorderRadius.circular(25),
               ),
-              height: MediaQuery.of(context).size.height * 0.4,
               child: const Icon(
                 Icons.music_note_outlined,
                 color: Colors.white,
@@ -108,27 +163,28 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
             )),
         Positioned(
           top: MediaQuery.of(context).size.height / 2,
-          left: MediaQuery.of(context).size.width / 10,
-          right: MediaQuery.of(context).size.width / 10,
-          child: Center(
-              child: Column(
-            children: [
-              Text(
-                musicList[currMusicIndex].split("/").last.split(".mp3").first,
-                style: const TextStyle(
-                    fontSize: 27,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black),
-              ),
-              const Text(
-                "No Artist - Composer",
-                style: TextStyle(
-                    color: Color.fromARGB(255, 14, 13, 13),
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold),
-              ),
-            ],
-          )),
+          left: 10,
+          child: Align(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  musicList[currMusicIndex].split("/").last.split(".mp3").first,
+                  style: const TextStyle(
+                      fontSize: 27,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black),
+                ),
+                const Text(
+                  "No Artist - Composer",
+                  style: TextStyle(
+                      color: Color.fromARGB(255, 14, 13, 13),
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
         ),
         Positioned(
           top: MediaQuery.of(context).size.height * 0.6,
@@ -321,6 +377,34 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
                     ))
               ],
             )),
+        Positioned(
+          top: MediaQuery.of(context).size.height * 0.79,
+          width: MediaQuery.of(context).size.width,
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: Icon(
+                    repeatIcon,
+                    color: Colors.black,
+                    size: 35,
+                  ),
+                  onPressed: toggleRepeat,
+                ),
+                IconButton(
+                  icon: Icon(
+                    randomIcon,
+                    color: Colors.black,
+                    size: 35,
+                  ),
+                  onPressed: toggleRandom,
+                ),
+              ],
+            ),
+          ),
+        ),
       ]),
     );
   }
