@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mzika/frontend/mzikaplayer.dart';
-import 'package:mzika/frontend/home.dart';
+import 'package:mzika/view/mzikaplayer.dart';
+import 'package:mzika/view/home.dart';
 
 void main() {
   SystemChrome.setSystemUIOverlayStyle(

@@ -1,17 +1,16 @@
-import 'dart:io';
-import 'package:metadata_god/metadata_god.dart';
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:mzika/frontend/mzikaplayer.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:path_provider_ex2/path_provider_ex2.dart';
+import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:path_provider_ex2/path_provider_ex2.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:metadata_god/metadata_god.dart';
+import 'package:sqflite/sqflite.dart';
 
-class AudioFile {
-  String path = "";
-  Metadata metadata = const Metadata();
-  AudioFile(this.path, this.metadata);
-}
+import 'package:flutter/material.dart';
+import 'dart:io';
+
+import 'package:mzika/view/mzikaplayer.dart';
+import 'package:mzika/model/audio_file.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -24,9 +23,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   // Initial state of the widget
-  List<String> musicList = [];
   MzikaPlayer player = MzikaPlayer(const [], 0);
-  List<String> files = [];
   List<AudioFile> audiofiles = [];
 
   // For getting all audio files
@@ -45,27 +42,47 @@ class _HomeState extends State<Home> {
     List<FileSystemEntity> files_ =
         dir.listSync(recursive: true, followLinks: false);
 
+    var appDocFolder = await getApplicationDocumentsDirectory();
+    var a = appDocFolder.listSync(recursive: true, followLinks: false);
+    a.forEach((element) async {
+      if (element.path.split("/").last == "database.db") {
+        await element.delete();
+        print("Database erased at : ${element.path}");
+      }
+    });
+
+    // To insert audio info to db
+    Future<void> insertAudioInfo(Database db, AudioFile file) async {
+      await db.insert("audio_files", file.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+
+    // Create db
+    var db = await openDatabase(
+      "${dir.path}/database.db",
+      onCreate: (db, version) {
+        return db.execute(
+          "CREATE TABLE audio_files(id INTEGER PRIMARY KEY, path TEXT, title TEXT, duration INTEGER, artist TEXT, album TEXT, album_artist TEXT, track_number INTEGER, track_total INTEGER, disc_number INTEGER, disc_total INTEGER, year INTEGER, genre TEXT, picture BLOB, file_size INTEGER)",
+        );
+      },
+      version: 1,
+    );
+    print("Database created at ${dir.path}/database.db");
+
     // Filtering by mp3 extension // TODO: add more audio extension support
     for (var entity in files_) {
       String file = entity.path;
       if (file.lastIndexOf('.') == -1) continue;
       String extension = file.substring(file.lastIndexOf('.'));
       if (extension == ".mp3") {
-        try {
-          var meta = await MetadataGod.readMetadata(file: file);
-          audiofiles.add(AudioFile(file, meta));
-        }
-        // ignore: empty_catches
-        catch (e) {
-          e.printError();
-        }
-
-        musicList.add(file);
-        print(file);
-        file = file.split('/').last;
-        files.add(file);
+        var meta = await MetadataGod.readMetadata(file: file);
+        AudioFile audiofile = AudioFile(path: file, metadata: meta);
+        audiofiles.add(audiofile);
+        await insertAudioInfo(db, audiofile);
       }
     }
+
+    await db.close();
 
     return true;
   }
@@ -80,7 +97,7 @@ class _HomeState extends State<Home> {
   void initState() {
     // getFiles();
     MetadataGod.initialize();
-    player = MzikaPlayer(musicList, 0);
+    player = MzikaPlayer([], 0);
     super.initState();
   }
 
@@ -103,8 +120,7 @@ class _HomeState extends State<Home> {
                 widget = ListView.builder(
                   itemCount: audiofiles.length,
                   itemBuilder: (context, index) {
-                    Metadata currentMeta = audiofiles[index].metadata;
-                    String currentPath = audiofiles[index].path;
+                    AudioFile currentAudioFile = audiofiles[index];
 
                     return Card(
                         child: ListTile(
@@ -113,46 +129,42 @@ class _HomeState extends State<Home> {
                           Align(
                             alignment: Alignment.topLeft,
                             child: Text(
-                              currentMeta.artist == null
+                              currentAudioFile.artist == null
                                   ? "Unknow Artist"
-                                  : currentMeta.artist!,
+                                  : currentAudioFile.artist!,
                               style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.black),
                             ),
                           ),
                           Text(
-                            audiofiles[index].path,
+                            currentAudioFile.path,
                             maxLines: 1,
                             style: const TextStyle(fontSize: 12),
                           )
                         ],
                       ),
-                      title: Text(audiofiles[index].metadata.title == null
-                          ? audiofiles[index]
-                              .path
+                      title: Text(currentAudioFile.title == null
+                          ? currentAudioFile.path
                               .split('/')
                               .last
                               .split('.')
                               .first
-                          : audiofiles[index]
-                              .metadata
-                              .title!), //musics[index].title!),
-                      leading: audiofiles[index].metadata.picture == null
-                          ? const Icon(
-                              Icons.audiotrack_outlined,
-                              color: Color.fromARGB(255, 62, 43, 190),
-                              size: 35,
-                            )
-                          : Container(
-                              margin: const EdgeInsets.all(8),
-                              child: ClipRRect(
+                          : currentAudioFile.title!),
+                      leading: Container(
+                        margin: const EdgeInsets.all(8),
+                        child: currentAudioFile.picture == null
+                            ? const Icon(
+                                Icons.audiotrack_outlined,
+                                color: Color.fromARGB(255, 62, 43, 190),
+                                size: 35,
+                              )
+                            : ClipRRect(
                                 borderRadius:
                                     const BorderRadius.all(Radius.circular(5)),
-                                child: Image.memory(
-                                    audiofiles[index].metadata.picture!.data),
+                                child: currentAudioFile.picture,
                               ),
-                            ),
+                      ),
                       trailing: const Icon(
                         Icons.more_vert_outlined,
                         color: Color.fromARGB(255, 61, 46, 135),

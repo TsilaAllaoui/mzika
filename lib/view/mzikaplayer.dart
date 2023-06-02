@@ -1,10 +1,10 @@
 import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter_media_metadata/flutter_media_metadata.dart';
+import 'package:metadata_god/metadata_god.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:mzika/frontend/colors/colors.dart' as app_color;
-import 'package:mzika/backend/player.dart';
+import 'package:mzika/view/colors/colors.dart' as app_color;
+import 'package:mzika/controller/player.dart';
 import 'package:flutter/material.dart';
 
 enum repeateState { off, one, all }
@@ -111,11 +111,11 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
 
   Future<Metadata> getMetadata() async {
     player.filename = musicList[currMusicIndex];
-    metadata = await MetadataRetriever.fromFile(File(player.filename));
-    String? trackName = metadata.trackName;
-    player.trackName = trackName ??
-        musicList[currMusicIndex].split("/").last.split(".mp3").first;
-    return metadata;
+    // metadata = await MetadataRetriever.fromFile(File(player.filename));
+    // String? trackName = metadata.trackName;
+    // player.trackName = trackName ??
+    //     musicList[currMusicIndex].split("/").last.split(".mp3").first;
+    return Metadata();
   }
 
   @override
