@@ -20,7 +20,7 @@ dependencies:
   flutter_spinkit: ^5.0.0
   permission_handler: ^10.2.0
   flutter_media_metadata: ^1.0.0+1
-
+  metadata_god: ^0.4.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

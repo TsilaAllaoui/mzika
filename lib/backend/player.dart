@@ -1,7 +1,10 @@
+import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter_media_metadata/flutter_media_metadata.dart';
 
 class Player {
   String filename = "";
+  String trackName = "";
   AudioPlayer player = AudioPlayer();
   bool playing = false;
   bool repeat = false;
@@ -15,8 +18,14 @@ class Player {
   Player(this.filename);
 
   // Setting file source
-  void setSource(String file) {
+  Future<void> setSource(String file) async {
     source = DeviceFileSource(file);
+    filename = file;
+    Metadata metadata = await MetadataRetriever.fromFile(File(filename));
+    currTimeString = "0:00:00";
+    currTime = 0;
+    totalDurationString = Duration(milliseconds: metadata.trackDuration!).toString().split('.').first;
+    totalDuration = Duration(milliseconds: metadata.trackDuration!).inSeconds.toDouble();
   }
 
   // To play music
