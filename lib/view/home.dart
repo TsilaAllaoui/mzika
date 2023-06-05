@@ -1,3 +1,4 @@
+import 'package:mzika/view/now_playing.dart';
 import 'package:mzika/view/searchbar.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider_ex2/path_provider_ex2.dart';
@@ -260,14 +261,14 @@ class _HomeState extends State<Home> {
                         size: 25,
                       ),
                       onTap: () {
-                        // player.player.stopMusic();
-                        // player = MzikaPlayer(musicList, index);
-                        // Navigator.push(
-                        //   context,
-                        //   MaterialPageRoute(builder: (context) {
-                        //     return player;
-                        //   }),
-                        // );
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) {
+                            return NowPlaying(
+                              audiofile: audiofiles[index],
+                            );
+                          }),
+                        );
                       },
                     ));
                   },
