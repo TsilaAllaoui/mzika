@@ -9,6 +9,9 @@
 .buildlog/
 .history
 .svn/
+design/
+.vscode/
+database.db
 
 # IntelliJ related
 *.iml

@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider_ex2/path_provider_ex2.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -25,9 +26,35 @@ class _HomeState extends State<Home> {
   MzikaPlayer player = MzikaPlayer(const [], 0);
   List<AudioFile> audiofiles = [];
   Database? db;
+  String pendingAction = "Scanning storage...";
+  late Future pendingFinished;
 
-  // For getting all audio files
-  Future<bool> getFilesList() async {
+  // To insert audio info to db
+  Future<void> insertAudioInfo(Database db, AudioFile file) async {
+    await db.insert("audio_files", file.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  // Erase db
+  Future<void> eraseDb() async {
+    // Db directory
+    Directory dbDir = await getApplicationDocumentsDirectory();
+
+    var filesInDbDir = dbDir.listSync(recursive: true, followLinks: false);
+    for (final element in filesInDbDir) {
+      if (element.path.split("/").last == "database.db") {
+        await element.delete();
+        print("Database deleted at : ${element.path}...");
+      }
+    }
+  }
+
+  // Create/Update Db
+  Future<void> updateDb() async {
+    setState(() {
+      pendingAction = "Scanning storage...";
+    });
+
     // Requesting storage permission if not enabled
     var status = await Permission.storage.status;
     if (status.isDenied) {
@@ -42,71 +69,12 @@ class _HomeState extends State<Home> {
     List<FileSystemEntity> files_ =
         dir.listSync(recursive: true, followLinks: false);
 
-    await updateDatabase();
+    // Db directory
+    Directory dbDir = await getApplicationDocumentsDirectory();
 
-    // Filtering by mp3 extension // TODO: add more audio extension support
-    for (var entity in files_) {
-      String file = entity.path;
-      if (file.lastIndexOf('.') == -1) continue;
-      String extension = file.substring(file.lastIndexOf('.'));
-      if (extension == ".mp3") {
-        try {
-          var meta = await MetadataGod.readMetadata(file: file);
-          AudioFile audiofile = AudioFile(path: file, metadata: meta);
-          // audiofiles.add(audiofile);
-          await insertAudioInfo(db!, audiofile);
-        } catch (e) {
-          print("Error getting metadata from $file");
-        }
-      }
-    }
-
-    await updateAudioFiles();
-
-    await db!.close();
-
-    return true;
-  }
-
-  Future<void> updateAudioFiles() async {
-    // Safeguard
-    if (db == null) {
-      print("Database not found...");
-      return;
-    }
-
-    final List<Map<String, dynamic>> maps = await db!.query('audio_files');
-    for (final element in maps) {
-      audiofiles.add(AudioFile.fromMap(map: element));
-    }
-  }
-
-  // To update database containing audio files metadatas and infos
-  Future<void> updateDatabase() async {
-    // Getting internal storage path
-    List<StorageInfo> storageInfo = await PathProviderEx2.getStorageInfo();
-    var internaleStoragePath = storageInfo[0].rootDir;
-    Directory dir = Directory(internaleStoragePath);
-
-    // The db directory
-    Directory databseDir = dir;
-
-    // var appDocFolder = await getApplicationDocumentsDirectory();
-    // databsePath = appDocFolder.path;
-
-    // Erase previous db and create a new one
-    var filesInDbPath =
-        databseDir.listSync(recursive: true, followLinks: false);
-    for (final file in filesInDbPath) {
-      if (file.path.split("/").last == "database.db") {
-        await file.delete();
-        break;
-      }
-    }
-
-    // Create db
+    // Open/Create db
     db = await openDatabase(
-      "${databseDir.path}/database.db",
+      "${dbDir.path}/database.db",
       onCreate: (db, version) {
         return db.execute(
           "CREATE TABLE audio_files(id INTEGER PRIMARY KEY, path TEXT, title TEXT, duration INTEGER, artist TEXT, album TEXT, album_artist TEXT, track_number INTEGER, track_total INTEGER, disc_number INTEGER, disc_total INTEGER, year INTEGER, genre TEXT, picture BLOB, file_size INTEGER)",
@@ -114,25 +82,55 @@ class _HomeState extends State<Home> {
       },
       version: 1,
     );
-    print("Database created at ${databseDir.path}/database.db");
+
+    // If db already exist,skipping file rescanning...
+    if (await databaseFactory.databaseExists("${dbDir.path}/database.db")) {
+      print(
+          "Database already exist at ${dbDir.path}/database.db... Skipping creation...");
+      return;
+    }
+
+    // Filtering by mp3 extension // TODO: add more audio extension support
+    for (var entity in files_) {
+      String file = entity.path;
+      if (file.lastIndexOf('.') == -1) continue;
+      String extension = file.substring(file.lastIndexOf('.'));
+      if (extension == ".mp3") {
+        var meta = await MetadataGod.readMetadata(file: file);
+        AudioFile audiofile = AudioFile(path: file, metadata: meta);
+        // audiofiles.add(audiofile);
+        await insertAudioInfo(db!, audiofile);
+      }
+    }
   }
 
-  // To insert audio info to db
-  Future<void> insertAudioInfo(Database db, AudioFile file) async {
-    await db.insert("audio_files", file.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+  Future<void> getAudioFilesFromDb() async {
+    setState(() {
+      pendingAction = "Listing files...";
+    });
+    var entries = await db!.query("audio_files", limit: 100);
+    for (final entry in entries) {
+      var file = AudioFile.fromMap(map: entry);
+      try {
+        audiofiles.add(file);
+      } catch (e) {
+        print(file);
+      }
+    }
   }
 
-  // // Get audio files and update state
-  // void getFiles() async {
-  //   getFilesList();
-  //   setState(() {});
-  // }
+  // For getting all audio files
+  Future<bool> getFilesList() async {
+    await updateDb();
+    await getAudioFilesFromDb();
+    await db!.close();
+    return true;
+  }
 
   @override
   void initState() {
-    // getFiles();
     MetadataGod.initialize();
+    pendingFinished = getFilesList();
     player = MzikaPlayer([], 0);
     super.initState();
   }
@@ -147,7 +145,7 @@ class _HomeState extends State<Home> {
           backgroundColor: const Color.fromARGB(255, 62, 43, 190),
         ),
         body: FutureBuilder(
-          future: getFilesList(),
+          future: pendingFinished,
           builder: (context, snapshot) {
             Widget widget = const Text("");
 
@@ -223,20 +221,22 @@ class _HomeState extends State<Home> {
                 widget = Text("Error ${snapshot.error}");
               }
             } else if (snapshot.connectionState == ConnectionState.waiting) {
-              widget = const Center(
+              widget = Center(
                   child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SpinKitCubeGrid(
-                    color: Color.fromARGB(255, 62, 43, 190),
+                    color: pendingAction == "Scanning storage..."
+                        ? const Color.fromARGB(255, 62, 43, 190)
+                        : Colors.orange,
                     size: 20,
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 25,
                   ),
                   Text(
-                    "Scanning storage...",
-                    style: TextStyle(fontSize: 15),
+                    pendingAction,
+                    style: const TextStyle(fontSize: 15),
                   )
                 ],
               ));

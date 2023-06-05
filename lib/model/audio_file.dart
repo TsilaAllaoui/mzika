@@ -51,7 +51,9 @@ class AudioFile {
     discTotal = map["disc_total"];
     year = map["year"];
     genre = map["genre"];
-    picture = Image.memory(map["picture"] as Uint8List);
+    picture = ((map["picture"] as Uint8List).toList().isEmpty)
+        ? null
+        : Image.memory(map["picture"] as Uint8List);
     fileSize = map["file_size"];
   }
 
