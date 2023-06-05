@@ -1,3 +1,4 @@
+import 'package:mzika/view/searchbar.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider_ex2/path_provider_ex2.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -23,12 +24,14 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   // Initial state of the widget
   MzikaPlayer player = MzikaPlayer(const [], 0);
+  List<AudioFile> allAudioFiles = [];
   List<AudioFile> audiofiles = [];
   Database? db;
   String pendingAction = "Scanning storage...";
   late Future pendingFinished;
   String? selectedOptions;
   List<String> options = ["Clear database"];
+  TextEditingController searchController = TextEditingController();
 
   // To insert audio info to db
   Future<void> insertAudioInfo(Database db, AudioFile file) async {
@@ -97,7 +100,6 @@ class _HomeState extends State<Home> {
           if (extension == ".mp3") {
             var meta = await MetadataGod.readMetadata(file: file);
             AudioFile audiofile = AudioFile(path: file, metadata: meta);
-            // audiofiles.add(audiofile);
             await insertAudioInfo(db!, audiofile);
           }
         }
@@ -128,7 +130,6 @@ class _HomeState extends State<Home> {
   Future<bool> getFilesList() async {
     await updateDb();
     await getAudioFilesFromDb();
-    await db!.close();
     return true;
   }
 
@@ -136,8 +137,32 @@ class _HomeState extends State<Home> {
   void initState() {
     MetadataGod.initialize();
     pendingFinished = getFilesList();
+    allAudioFiles = audiofiles;
     player = MzikaPlayer([], 0);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    db!.close();
+    super.dispose();
+  }
+
+  void updateAudioFiles(List<AudioFile> files) {
+    if (files.isEmpty) {
+      files = allAudioFiles;
+    } else if (files.length == 1 && files[0].path == "Not Found") {
+      files = allAudioFiles;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("No result found"),
+        ),
+      );
+    }
+    setState(() {
+      audiofiles = files;
+    });
   }
 
   @override
@@ -145,36 +170,36 @@ class _HomeState extends State<Home> {
     return Scaffold(
         backgroundColor: const Color.fromARGB(255, 235, 235, 235),
         appBar: AppBar(
-          title: const Text("Mzika"),
-          centerTitle: true,
-          backgroundColor: const Color.fromARGB(255, 62, 43, 190),
-          actions: [
-            PopupMenuButton(
-              onSelected: (var choice) async {
-                await eraseDb();
-                if (choice == "Clear database") {
-                  setState(() {
-                    pendingFinished = updateDb();
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text("Database cleared..."),
-                        duration: Duration(seconds: 2)),
-                  );
-                }
-              },
-              padding: EdgeInsets.zero,
-              itemBuilder: (BuildContext context) {
-                return options.map((String choice) {
-                  return PopupMenuItem<String>(
-                    value: choice,
-                    child: Text(choice),
-                  );
-                }).toList();
-              },
-            )
-          ],
-        ),
+            title: const Text("Mzika"),
+            centerTitle: false,
+            backgroundColor: const Color.fromARGB(255, 62, 43, 190),
+            actions: [
+              CustomSearchBar(updateFunction: updateAudioFiles, db: db),
+              PopupMenuButton(
+                onSelected: (var choice) async {
+                  await eraseDb();
+                  if (choice == "Clear database") {
+                    setState(() {
+                      pendingFinished = updateDb();
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text("Database cleared..."),
+                          duration: Duration(seconds: 2)),
+                    );
+                  }
+                },
+                padding: EdgeInsets.zero,
+                itemBuilder: (BuildContext context) {
+                  return options.map((String choice) {
+                    return PopupMenuItem<String>(
+                      value: choice,
+                      child: Text(choice),
+                    );
+                  }).toList();
+                },
+              ),
+            ]),
         body: FutureBuilder(
           future: pendingFinished,
           builder: (context, snapshot) {
