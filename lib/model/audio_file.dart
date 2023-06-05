@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:metadata_god/metadata_god.dart';
 
 class AudioFile {
-  String path;
-  Metadata metadata;
+  late String path;
+  late Metadata metadata;
 
   String? title;
   double? duration;
@@ -35,6 +35,24 @@ class AudioFile {
     picture =
         metadata.picture == null ? null : Image.memory(metadata.picture!.data);
     fileSize = metadata.fileSize ?? 0;
+  }
+
+  AudioFile.fromMap({required Map<String, dynamic> map}) {
+    metadata = const Metadata();
+    path = map["path"];
+    title = map["title"];
+    duration = map["duration"].toDouble();
+    artist = map["artist"];
+    album = map["album"];
+    albumArtist = map["album_artist"];
+    trackNumber = map["track_number"];
+    trackTotal = map["track_total"];
+    discNumber = map["disc_number"];
+    discTotal = map["disc_total"];
+    year = map["year"];
+    genre = map["genre"];
+    picture = Image.memory(map["picture"] as Uint8List);
+    fileSize = map["file_size"];
   }
 
   Map<String, dynamic> toMap() {
