@@ -1,4 +1,3 @@
-import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider_ex2/path_provider_ex2.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -28,6 +27,8 @@ class _HomeState extends State<Home> {
   Database? db;
   String pendingAction = "Scanning storage...";
   late Future pendingFinished;
+  String? selectedOptions;
+  List<String> options = ["Clear database"];
 
   // To insert audio info to db
   Future<void> insertAudioInfo(Database db, AudioFile file) async {
@@ -36,21 +37,22 @@ class _HomeState extends State<Home> {
   }
 
   // Erase db
-  Future<void> eraseDb() async {
+  Future<bool> eraseDb() async {
     // Db directory
     Directory dbDir = await getApplicationDocumentsDirectory();
 
     var filesInDbDir = dbDir.listSync(recursive: true, followLinks: false);
     for (final element in filesInDbDir) {
       if (element.path.split("/").last == "database.db") {
-        await element.delete();
-        print("Database deleted at : ${element.path}...");
+        var res = await element.delete();
+        print("Database deleted at : ${element.path}...$res");
       }
     }
+    return true;
   }
 
   // Create/Update Db
-  Future<void> updateDb() async {
+  Future<bool> updateDb() async {
     setState(() {
       pendingAction = "Scanning storage...";
     });
@@ -85,23 +87,26 @@ class _HomeState extends State<Home> {
 
     // If db already exist,skipping file rescanning...
     if (await databaseFactory.databaseExists("${dbDir.path}/database.db")) {
-      print(
-          "Database already exist at ${dbDir.path}/database.db... Skipping creation...");
-      return;
-    }
-
-    // Filtering by mp3 extension // TODO: add more audio extension support
-    for (var entity in files_) {
-      String file = entity.path;
-      if (file.lastIndexOf('.') == -1) continue;
-      String extension = file.substring(file.lastIndexOf('.'));
-      if (extension == ".mp3") {
-        var meta = await MetadataGod.readMetadata(file: file);
-        AudioFile audiofile = AudioFile(path: file, metadata: meta);
-        // audiofiles.add(audiofile);
-        await insertAudioInfo(db!, audiofile);
+      var entries = await db!.query("audio_files", limit: 5);
+      if (entries.isEmpty) {
+        // Filtering by mp3 extension // TODO: add more audio extension support
+        for (var entity in files_) {
+          String file = entity.path;
+          if (file.lastIndexOf('.') == -1) continue;
+          String extension = file.substring(file.lastIndexOf('.'));
+          if (extension == ".mp3") {
+            var meta = await MetadataGod.readMetadata(file: file);
+            AudioFile audiofile = AudioFile(path: file, metadata: meta);
+            // audiofiles.add(audiofile);
+            await insertAudioInfo(db!, audiofile);
+          }
+        }
+      } else {
+        print(
+            "Database already exist at ${dbDir.path}/database.db... Skipping creation...");
       }
     }
+    return true;
   }
 
   Future<void> getAudioFilesFromDb() async {
@@ -143,6 +148,32 @@ class _HomeState extends State<Home> {
           title: const Text("Mzika"),
           centerTitle: true,
           backgroundColor: const Color.fromARGB(255, 62, 43, 190),
+          actions: [
+            PopupMenuButton(
+              onSelected: (var choice) async {
+                await eraseDb();
+                if (choice == "Clear database") {
+                  setState(() {
+                    pendingFinished = updateDb();
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text("Database cleared..."),
+                        duration: Duration(seconds: 2)),
+                  );
+                }
+              },
+              padding: EdgeInsets.zero,
+              itemBuilder: (BuildContext context) {
+                return options.map((String choice) {
+                  return PopupMenuItem<String>(
+                    value: choice,
+                    child: Text(choice),
+                  );
+                }).toList();
+              },
+            )
+          ],
         ),
         body: FutureBuilder(
           future: pendingFinished,
@@ -155,7 +186,6 @@ class _HomeState extends State<Home> {
                   itemCount: audiofiles.length,
                   itemBuilder: (context, index) {
                     AudioFile currentAudioFile = audiofiles[index];
-
                     return Card(
                         child: ListTile(
                       subtitle: Column(

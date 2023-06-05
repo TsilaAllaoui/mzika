@@ -21,6 +21,8 @@ dependencies:
   permission_handler: ^10.2.0
   metadata_god: ^0.4.1
   sqflite: ^2.2.8+4
+  context_menus: ^1.0.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
