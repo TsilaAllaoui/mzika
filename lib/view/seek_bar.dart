@@ -40,13 +40,12 @@ class _SeekBarState extends ConsumerState<SeekBar> {
         ),
         Expanded(
           child: Slider(
-            value: currentDuration.toDouble(),
+            value: ref.watch(positionChangesProvider),
             min: 0,
             max: totalDuration.toDouble(),
             onChanged: (double value) {
-              ref
-                  .read(positionChangesProvider.notifier)
-                  .updateCurrentPosition(value);
+              var p = ref.watch(playerProvider);
+              p.seek(Duration(seconds: value.toInt()));
             },
           ),
         ),

@@ -1,16 +1,19 @@
-import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:mzika/model/audio_file.dart';
-import 'package:mzika/view/preview.dart';
-import 'package:mzika/view/seek_bar.dart';
-import 'package:palette_generator/palette_generator.dart';
-import 'package:mzika/view/colors/colors.dart' as app_color;
 import 'package:mzika/controller/providers/player_provider.dart';
+import 'package:mzika/view/colors/colors.dart' as app_color;
+import 'package:audioplayers/audioplayers.dart';
+import 'package:mzika/model/audio_file.dart';
+import 'package:mzika/view/seek_bar.dart';
+import 'package:mzika/view/preview.dart';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:palette_generator/palette_generator.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:flutter/material.dart';
 
 class NowPlaying extends ConsumerStatefulWidget {
   NowPlaying({super.key, required this.audiofile});
+
+  // The current player
   AudioFile audiofile;
 
   @override
@@ -18,11 +21,14 @@ class NowPlaying extends ConsumerStatefulWidget {
 }
 
 class _NowPlayingState extends ConsumerState<NowPlaying> {
+  // Initialization
   AudioFile? audiofile;
   AudioPlayer player = AudioPlayer();
+  PaletteGenerator? dominantPalette;
 
+  // For updating audiofile entry duration
   Future<bool> updateDuration() async {
-    var a = await player.setSourceDeviceFile(audiofile!.path);
+    await player.setSourceDeviceFile(audiofile!.path);
     var d = await player.getDuration();
     if (d!.inSeconds == 0) {
       print("Error getting duration");
@@ -38,11 +44,14 @@ class _NowPlayingState extends ConsumerState<NowPlaying> {
   void initState() {
     player = AudioPlayer();
     audiofile = widget.audiofile;
+
+    // For updating slider and current duration on changes
     player.onPositionChanged.listen((d) {
       ref
           .read(positionChangesProvider.notifier)
           .updateCurrentPosition(d.inSeconds.toDouble());
     });
+
     super.initState();
   }
 
@@ -52,8 +61,7 @@ class _NowPlayingState extends ConsumerState<NowPlaying> {
     super.dispose();
   }
 
-  PaletteGenerator? dominantPalette;
-
+  // For getting the colors that are dominant in audiofile metadata
   Future<PaletteGenerator> getDominantColor() async {
     if (audiofile!.picture == null) {
       return PaletteGenerator.fromColors([
@@ -66,6 +74,7 @@ class _NowPlayingState extends ConsumerState<NowPlaying> {
 
   @override
   Widget build(BuildContext context) {
+    Future(() => {ref.read(playerProvider.notifier).setPlayer(player)});
     return WillPopScope(
       onWillPop: () async {
         Navigator.of(context).pop();
@@ -146,6 +155,3 @@ class _NowPlayingState extends ConsumerState<NowPlaying> {
     );
   }
 }
-
-// Color.fromARGB(255, 62, 43, 190),
-// Color.fromARGB(255, 129, 118, 201),
