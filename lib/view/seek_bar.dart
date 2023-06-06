@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mzika/controller/providers/main_palette_provider.dart';
 import 'package:mzika/model/audio_file.dart';
 
 import '../controller/providers/player_provider.dart';
@@ -47,6 +48,7 @@ class _SeekBarState extends ConsumerState<SeekBar> {
               var p = ref.watch(playerProvider);
               p.seek(Duration(seconds: value.toInt()));
             },
+            activeColor: ref.read(mainPaletteProvider).colors.toList()[0],
           ),
         ),
         Text(

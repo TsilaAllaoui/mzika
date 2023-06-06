@@ -1,3 +1,4 @@
+import 'package:mzika/controller/providers/main_palette_provider.dart';
 import 'package:mzika/controller/providers/player_provider.dart';
 import 'package:mzika/view/action_buttons.dart';
 import 'package:mzika/view/colors/colors.dart' as app_color;
@@ -38,6 +39,9 @@ class _NowPlayingState extends ConsumerState<NowPlaying> {
     audiofile!.duration = d.inSeconds.toDouble();
     dominantPalette = await getDominantColor();
     player.play(player.source!);
+
+    ref.read(mainPaletteProvider.notifier).updateMainPalette(dominantPalette!);
+
     return true;
   }
 

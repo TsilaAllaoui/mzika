@@ -91,7 +91,7 @@ class _HomeState extends State<Home> {
 
     // If db already exist,skipping file rescanning...
     if (await databaseFactory.databaseExists("${dbDir.path}/database.db")) {
-      var entries = await db!.query("audio_files", limit: 5);
+      var entries = await db!.query("audio_files", limit: 100);
       if (entries.isEmpty) {
         // Filtering by mp3 extension // TODO: add more audio extension support
         for (var entity in files_) {
@@ -99,9 +99,13 @@ class _HomeState extends State<Home> {
           if (file.lastIndexOf('.') == -1) continue;
           String extension = file.substring(file.lastIndexOf('.'));
           if (extension == ".mp3") {
-            var meta = await MetadataGod.readMetadata(file: file);
-            AudioFile audiofile = AudioFile(path: file, metadata: meta);
-            await insertAudioInfo(db!, audiofile);
+            try {
+              var meta = await MetadataGod.readMetadata(file: file);
+              AudioFile audiofile = AudioFile(path: file, metadata: meta);
+              await insertAudioInfo(db!, audiofile);
+            } catch (e) {
+              print("File $file not added.");
+            }
           }
         }
       } else {
@@ -185,11 +189,11 @@ class _HomeState extends State<Home> {
                       setState(() {
                         pendingFinished = updateDb();
                       });
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text("Database cleared..."),
-                            duration: Duration(seconds: 2)),
-                      );
+                      // ScaffoldMessenger.of(context).showSnackBar(
+                      //   const SnackBar(
+                      //       content: Text("Database cleared..."),
+                      //       duration: Duration(seconds: 2)),
+                      // );
                     }
                   },
                   padding: EdgeInsets.zero,
