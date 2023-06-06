@@ -142,7 +142,7 @@ class _NowPlayingState extends ConsumerState<NowPlaying> {
                         height: 20,
                       ),
                       SeekBar(audioFile: audiofile!),
-                      const ActionButtons(),
+                      ActionButtons(),
                     ],
                   ),
                 );
