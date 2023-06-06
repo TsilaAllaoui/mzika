@@ -1,5 +1,5 @@
 import 'package:mzika/view/now_playing.dart';
-import 'package:mzika/view/searchbar.dart';
+import 'package:mzika/view/search_bar.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider_ex2/path_provider_ex2.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -265,7 +265,7 @@ class _HomeState extends State<Home> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (ctx) {
+                            MaterialPageRoute(builder: (context) {
                               return NowPlaying(
                                 audiofile: audiofiles[index],
                               );

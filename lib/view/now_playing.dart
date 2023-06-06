@@ -1,4 +1,5 @@
 import 'package:mzika/controller/providers/player_provider.dart';
+import 'package:mzika/view/action_buttons.dart';
 import 'package:mzika/view/colors/colors.dart' as app_color;
 import 'package:audioplayers/audioplayers.dart';
 import 'package:mzika/model/audio_file.dart';
@@ -141,6 +142,7 @@ class _NowPlayingState extends ConsumerState<NowPlaying> {
                         height: 20,
                       ),
                       SeekBar(audioFile: audiofile!),
+                      const ActionButtons(),
                     ],
                   ),
                 );
