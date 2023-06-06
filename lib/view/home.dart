@@ -265,7 +265,7 @@ class _HomeState extends State<Home> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) {
+                            MaterialPageRoute(builder: (ctx) {
                               return NowPlaying(
                                 audiofile: audiofiles[index],
                               );

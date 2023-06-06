@@ -1,30 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mzika/model/audio_file.dart';
 
-class SeekBar extends StatefulWidget {
+import '../controller/providers/player_provider.dart';
+
+class SeekBar extends ConsumerStatefulWidget {
   SeekBar({super.key, required this.audioFile});
 
   late AudioFile audioFile;
 
   @override
-  State<SeekBar> createState() => _SeekBarState();
+  ConsumerState<SeekBar> createState() => _SeekBarState();
 }
 
-class _SeekBarState extends State<SeekBar> {
-  @override
-  void initState() {
-    audiofile = widget.audioFile;
-    currentDuration = 0;
-    totalDuration = audiofile.duration!.toInt();
-    super.initState();
-  }
-
+class _SeekBarState extends ConsumerState<SeekBar> {
   late AudioFile audiofile;
   late int currentDuration;
   late int totalDuration;
 
   @override
+  void initState() {
+    audiofile = widget.audioFile;
+    totalDuration = audiofile.duration!.toInt();
+    currentDuration = 0;
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    currentDuration = ref.watch(positionChangesProvider).toInt();
     return Row(
       children: [
         Text(
@@ -36,10 +40,14 @@ class _SeekBarState extends State<SeekBar> {
         ),
         Expanded(
           child: Slider(
-            value: totalDuration.toDouble(),
+            value: currentDuration.toDouble(),
             min: 0,
             max: totalDuration.toDouble(),
-            onChanged: (double value) {},
+            onChanged: (double value) {
+              ref
+                  .read(positionChangesProvider.notifier)
+                  .updateCurrentPosition(value);
+            },
           ),
         ),
         Text(
