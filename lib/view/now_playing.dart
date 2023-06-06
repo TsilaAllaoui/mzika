@@ -109,7 +109,10 @@ class _NowPlayingState extends ConsumerState<NowPlaying> {
                               Color.fromARGB(255, 133, 130, 130),
                               Color.fromARGB(255, 202, 195, 195),
                             ]
-                          : [...dominantPalette!.colors],
+                          : [
+                              dominantPalette!.colors.toList()[0],
+                              dominantPalette!.colors.toList()[1]
+                            ],
                     ),
                   ),
                   child: Column(
