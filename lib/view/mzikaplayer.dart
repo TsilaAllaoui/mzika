@@ -1,4 +1,3 @@
-
 import 'package:audioplayers/audioplayers.dart';
 import 'package:metadata_god/metadata_god.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -153,7 +152,7 @@ class _MzikaPlayerState extends State<MzikaPlayer> {
                   return Future.value(false);
                 },
                 child: Scaffold(
-                  backgroundColor: app_color.white,
+                  backgroundColor: app_color.purple,
                   appBar: AppBar(
                     title: const Text("Player"),
                     centerTitle: true,

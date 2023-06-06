@@ -168,138 +168,141 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        backgroundColor: const Color.fromARGB(255, 235, 235, 235),
-        appBar: AppBar(
-            title: const Text("Mzika"),
-            centerTitle: false,
-            backgroundColor: const Color.fromARGB(255, 62, 43, 190),
-            actions: [
-              CustomSearchBar(updateFunction: updateAudioFiles, db: db),
-              PopupMenuButton(
-                onSelected: (var choice) async {
-                  await eraseDb();
-                  if (choice == "Clear database") {
-                    setState(() {
-                      pendingFinished = updateDb();
-                    });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text("Database cleared..."),
-                          duration: Duration(seconds: 2)),
-                    );
-                  }
-                },
-                padding: EdgeInsets.zero,
-                itemBuilder: (BuildContext context) {
-                  return options.map((String choice) {
-                    return PopupMenuItem<String>(
-                      value: choice,
-                      child: Text(choice),
-                    );
-                  }).toList();
-                },
-              ),
-            ]),
-        body: FutureBuilder(
-          future: pendingFinished,
-          builder: (context, snapshot) {
-            Widget widget = const Text("");
-
-            if (snapshot.connectionState == ConnectionState.done) {
-              if (snapshot.hasData) {
-                widget = ListView.builder(
-                  itemCount: audiofiles.length,
-                  itemBuilder: (context, index) {
-                    AudioFile currentAudioFile = audiofiles[index];
-                    return Card(
-                        child: ListTile(
-                      subtitle: Column(
-                        children: [
-                          Align(
-                            alignment: Alignment.topLeft,
-                            child: Text(
-                              currentAudioFile.artist == null
-                                  ? "Unknow Artist"
-                                  : currentAudioFile.artist!,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black),
-                            ),
-                          ),
-                          Text(
-                            currentAudioFile.path,
-                            maxLines: 1,
-                            style: const TextStyle(fontSize: 12),
-                          )
-                        ],
-                      ),
-                      title: Text(currentAudioFile.title == null
-                          ? currentAudioFile.path
-                              .split('/')
-                              .last
-                              .split('.')
-                              .first
-                          : currentAudioFile.title!),
-                      leading: Container(
-                        margin: const EdgeInsets.all(8),
-                        child: currentAudioFile.picture == null
-                            ? const Icon(
-                                Icons.audiotrack_outlined,
-                                color: Color.fromARGB(255, 62, 43, 190),
-                                size: 35,
-                              )
-                            : ClipRRect(
-                                borderRadius:
-                                    const BorderRadius.all(Radius.circular(5)),
-                                child: currentAudioFile.picture,
-                              ),
-                      ),
-                      trailing: const Icon(
-                        Icons.more_vert_outlined,
-                        color: Color.fromARGB(255, 61, 46, 135),
-                        size: 25,
-                      ),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) {
-                            return NowPlaying(
-                              audiofile: audiofiles[index],
-                            );
-                          }),
-                        );
-                      },
-                    ));
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+          backgroundColor: const Color.fromARGB(255, 235, 235, 235),
+          appBar: AppBar(
+              title: const Text("Mzika"),
+              centerTitle: false,
+              backgroundColor: const Color.fromARGB(255, 62, 43, 190),
+              actions: [
+                CustomSearchBar(updateFunction: updateAudioFiles, db: db),
+                PopupMenuButton(
+                  onSelected: (var choice) async {
+                    await eraseDb();
+                    if (choice == "Clear database") {
+                      setState(() {
+                        pendingFinished = updateDb();
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text("Database cleared..."),
+                            duration: Duration(seconds: 2)),
+                      );
+                    }
                   },
-                );
-              } else if (snapshot.hasError) {
-                widget = Text("Error ${snapshot.error}");
-              }
-            } else if (snapshot.connectionState == ConnectionState.waiting) {
-              widget = Center(
-                  child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SpinKitCubeGrid(
-                    color: pendingAction == "Scanning storage..."
-                        ? const Color.fromARGB(255, 62, 43, 190)
-                        : Colors.orange,
-                    size: 20,
-                  ),
-                  const SizedBox(
-                    height: 25,
-                  ),
-                  Text(
-                    pendingAction,
-                    style: const TextStyle(fontSize: 15),
-                  )
-                ],
-              ));
-            }
+                  padding: EdgeInsets.zero,
+                  itemBuilder: (BuildContext context) {
+                    return options.map((String choice) {
+                      return PopupMenuItem<String>(
+                        value: choice,
+                        child: Text(choice),
+                      );
+                    }).toList();
+                  },
+                ),
+              ]),
+          body: FutureBuilder(
+            future: pendingFinished,
+            builder: (context, snapshot) {
+              Widget widget = const Text("");
 
-            return widget;
-          },
-        ));
+              if (snapshot.connectionState == ConnectionState.done) {
+                if (snapshot.hasData) {
+                  widget = ListView.builder(
+                    itemCount: audiofiles.length,
+                    itemBuilder: (context, index) {
+                      AudioFile currentAudioFile = audiofiles[index];
+                      return Card(
+                          child: ListTile(
+                        subtitle: Column(
+                          children: [
+                            Align(
+                              alignment: Alignment.topLeft,
+                              child: Text(
+                                currentAudioFile.artist == null
+                                    ? "Unknow Artist"
+                                    : currentAudioFile.artist!,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black),
+                              ),
+                            ),
+                            Text(
+                              currentAudioFile.path,
+                              maxLines: 1,
+                              style: const TextStyle(fontSize: 12),
+                            )
+                          ],
+                        ),
+                        title: Text(currentAudioFile.title == null
+                            ? currentAudioFile.path
+                                .split('/')
+                                .last
+                                .split('.')
+                                .first
+                            : currentAudioFile.title!),
+                        leading: Container(
+                          margin: const EdgeInsets.all(8),
+                          child: currentAudioFile.picture == null
+                              ? const Icon(
+                                  Icons.audiotrack_outlined,
+                                  color: Color.fromARGB(255, 62, 43, 190),
+                                  size: 35,
+                                )
+                              : ClipRRect(
+                                  borderRadius: const BorderRadius.all(
+                                      Radius.circular(5)),
+                                  child: currentAudioFile.picture,
+                                ),
+                        ),
+                        trailing: const Icon(
+                          Icons.more_vert_outlined,
+                          color: Color.fromARGB(255, 61, 46, 135),
+                          size: 25,
+                        ),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) {
+                              return NowPlaying(
+                                audiofile: audiofiles[index],
+                              );
+                            }),
+                          );
+                        },
+                      ));
+                    },
+                  );
+                } else if (snapshot.hasError) {
+                  widget = Text("Error ${snapshot.error}");
+                }
+              } else if (snapshot.connectionState == ConnectionState.waiting) {
+                widget = Center(
+                    child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SpinKitCubeGrid(
+                      color: pendingAction == "Scanning storage..."
+                          ? const Color.fromARGB(255, 62, 43, 190)
+                          : Colors.orange,
+                      size: 20,
+                    ),
+                    const SizedBox(
+                      height: 25,
+                    ),
+                    Text(
+                      pendingAction,
+                      style: const TextStyle(fontSize: 15),
+                    )
+                  ],
+                ));
+              }
+
+              return widget;
+            },
+          )),
+    );
   }
 }

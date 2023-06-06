@@ -42,7 +42,7 @@ class AudioFile {
     path = map["path"];
     title = map["title"];
     duration = map["duration"].toDouble();
-    artist = map["artist"];
+    artist = map["artist"] == "" ? "Unknown Artist" : map["artist"];
     album = map["album"];
     albumArtist = map["album_artist"];
     trackNumber = map["track_number"];

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mzika/view/mzikaplayer.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mzika/view/home.dart';
 
 void main() {
@@ -9,8 +9,9 @@ void main() {
       statusBarColor: Color.fromARGB(255, 62, 43, 190),
     ),
   );
-  runApp(MaterialApp(debugShowCheckedModeBanner: false, routes: {
-    '/': (context) => const Home(),
-    '/player': (context) => MzikaPlayer(const [], 0),
-  }));
+  runApp(
+    const ProviderScope(
+      child: MaterialApp(home: Home()),
+    ),
+  );
 }
