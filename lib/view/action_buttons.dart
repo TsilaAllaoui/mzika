@@ -55,15 +55,6 @@ class _ActionButtonsState extends ConsumerState<ActionButtons> {
             }
           },
           icon: middleIcon,
-          // icon: ref.read(playerProvider).state == PlayerState.paused
-          //     ? const Icon(
-          //         Icons.play_arrow_rounded,
-          //         color: Colors.black,
-          //       )
-          //     : const Icon(
-          //         Icons.pause,
-          //         color: Colors.black,
-          //       ),
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(),
         ),
@@ -86,42 +77,5 @@ class _ActionButtonsState extends ConsumerState<ActionButtons> {
         ),
       ],
     );
-    /*return Container(
-      padding: EdgeInsets.all(0),
-      margin: EdgeInsets.all(0),
-      color: Colors.red,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(
-              Icons.skip_previous_rounded,
-              color: Colors.black,
-              size: 75,
-            ),
-          ),
-          IconButton(
-            onPressed: () {},
-            icon: Icon(
-              playerState == PlayerState.paused
-                  ? Icons.pause_circle_outline_outlined
-                  : Icons.play_arrow_rounded,
-              size: 75,
-              color: Colors.black,
-            ),
-          ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(
-              Icons.skip_next_rounded,
-              size: 75,
-              color: Colors.black,
-            ),
-          )
-        ],
-      ),
-    );
-  */
   }
 }

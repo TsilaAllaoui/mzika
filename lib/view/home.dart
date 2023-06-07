@@ -1,3 +1,6 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mzika/controller/providers/audio_files_provider.dart';
+import 'package:mzika/controller/providers/database_provider.dart';
 import 'package:mzika/view/now_playing.dart';
 import 'package:mzika/view/search_bar.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -5,6 +8,7 @@ import 'package:path_provider_ex2/path_provider_ex2.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:metadata_god/metadata_god.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'package:flutter/material.dart';
@@ -13,20 +17,18 @@ import 'dart:io';
 import 'package:mzika/view/mzikaplayer.dart';
 import 'package:mzika/model/audio_file.dart';
 
-class Home extends StatefulWidget {
+class Home extends ConsumerStatefulWidget {
   const Home({super.key});
 
   @override
-  State<Home> createState() {
+  ConsumerState<Home> createState() {
     return _HomeState(); //create state
   }
 }
 
-class _HomeState extends State<Home> {
+class _HomeState extends ConsumerState<Home> {
   // Initial state of the widget
   MzikaPlayer player = MzikaPlayer(const [], 0);
-  List<AudioFile> allAudioFiles = [];
-  List<AudioFile> audiofiles = [];
   Database? db;
   String pendingAction = "Scanning storage...";
   late Future pendingFinished;
@@ -35,24 +37,10 @@ class _HomeState extends State<Home> {
   TextEditingController searchController = TextEditingController();
 
   // To insert audio info to db
-  Future<void> insertAudioInfo(Database db, AudioFile file) async {
-    await db.insert("audio_files", file.toMap(),
+  Future<void> insertAudioInfo(AudioFile file) async {
+    var db = ref.read(databaseProvider);
+    await db!.insert("audio_files", file.toMap(),
         conflictAlgorithm: ConflictAlgorithm.replace);
-  }
-
-  // Erase db
-  Future<bool> eraseDb() async {
-    // Db directory
-    Directory dbDir = await getApplicationDocumentsDirectory();
-
-    var filesInDbDir = dbDir.listSync(recursive: true, followLinks: false);
-    for (final element in filesInDbDir) {
-      if (element.path.split("/").last == "database.db") {
-        var res = await element.delete();
-        print("Database deleted at : ${element.path}...$res");
-      }
-    }
-    return true;
   }
 
   // Create/Update Db
@@ -89,6 +77,8 @@ class _HomeState extends State<Home> {
       version: 1,
     );
 
+    ref.read(databaseProvider.notifier).setDatabase(db!);
+
     // If db already exist,skipping file rescanning...
     if (await databaseFactory.databaseExists("${dbDir.path}/database.db")) {
       var entries = await db!.query("audio_files", limit: 100);
@@ -102,7 +92,7 @@ class _HomeState extends State<Home> {
             try {
               var meta = await MetadataGod.readMetadata(file: file);
               AudioFile audiofile = AudioFile(path: file, metadata: meta);
-              await insertAudioInfo(db!, audiofile);
+              await insertAudioInfo(audiofile);
             } catch (e) {
               print("File $file not added.");
             }
@@ -120,15 +110,18 @@ class _HomeState extends State<Home> {
     setState(() {
       pendingAction = "Listing files...";
     });
+    List<AudioFile> files = [];
     var entries = await db!.query("audio_files", limit: 100);
     for (final entry in entries) {
       var file = AudioFile.fromMap(map: entry);
       try {
-        audiofiles.add(file);
+        files.add(file);
       } catch (e) {
         print(file);
       }
     }
+    ref.read(audioFilesProvider.notifier).setAudioFiles(files);
+    ref.read(allAudioFilesProvider.notifier).setAudioFiles(files);
   }
 
   // For getting all audio files
@@ -142,7 +135,6 @@ class _HomeState extends State<Home> {
   void initState() {
     MetadataGod.initialize();
     pendingFinished = getFilesList();
-    allAudioFiles = audiofiles;
     player = MzikaPlayer([], 0);
     super.initState();
   }
@@ -154,159 +146,151 @@ class _HomeState extends State<Home> {
     super.dispose();
   }
 
-  void updateAudioFiles(List<AudioFile> files) {
-    if (files.isEmpty) {
-      files = allAudioFiles;
-    } else if (files.length == 1 && files[0].path == "Not Found") {
-      files = allAudioFiles;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("No result found"),
-        ),
-      );
-    }
-    setState(() {
-      audiofiles = files;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-          backgroundColor: const Color.fromARGB(255, 235, 235, 235),
-          appBar: AppBar(
-              title: const Text("Mzika"),
-              centerTitle: false,
-              backgroundColor: const Color.fromARGB(255, 62, 43, 190),
-              actions: [
-                CustomSearchBar(updateFunction: updateAudioFiles, db: db),
-                PopupMenuButton(
-                  onSelected: (var choice) async {
-                    await eraseDb();
-                    if (choice == "Clear database") {
-                      setState(() {
-                        pendingFinished = updateDb();
-                      });
-                      // ScaffoldMessenger.of(context).showSnackBar(
-                      //   const SnackBar(
-                      //       content: Text("Database cleared..."),
-                      //       duration: Duration(seconds: 2)),
-                      // );
-                    }
-                  },
-                  padding: EdgeInsets.zero,
-                  itemBuilder: (BuildContext context) {
-                    return options.map((String choice) {
-                      return PopupMenuItem<String>(
-                        value: choice,
-                        child: Text(choice),
-                      );
-                    }).toList();
-                  },
-                ),
-              ]),
-          body: FutureBuilder(
-            future: pendingFinished,
-            builder: (context, snapshot) {
-              Widget widget = const Text("");
-
-              if (snapshot.connectionState == ConnectionState.done) {
-                if (snapshot.hasData) {
-                  widget = ListView.builder(
-                    itemCount: audiofiles.length,
-                    itemBuilder: (context, index) {
-                      AudioFile currentAudioFile = audiofiles[index];
-                      return Card(
-                          child: ListTile(
-                        subtitle: Column(
-                          children: [
-                            Align(
-                              alignment: Alignment.topLeft,
-                              child: Text(
-                                currentAudioFile.artist == null
-                                    ? "Unknow Artist"
-                                    : currentAudioFile.artist!,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black),
-                              ),
-                            ),
-                            Text(
-                              currentAudioFile.path,
-                              maxLines: 1,
-                              style: const TextStyle(fontSize: 12),
-                            )
-                          ],
-                        ),
-                        title: Text(currentAudioFile.title == null
-                            ? currentAudioFile.path
-                                .split('/')
-                                .last
-                                .split('.')
-                                .first
-                            : currentAudioFile.title!),
-                        leading: Container(
-                          margin: const EdgeInsets.all(8),
-                          child: currentAudioFile.picture == null
-                              ? const Icon(
-                                  Icons.audiotrack_outlined,
-                                  color: Color.fromARGB(255, 62, 43, 190),
-                                  size: 35,
-                                )
-                              : ClipRRect(
-                                  borderRadius: const BorderRadius.all(
-                                      Radius.circular(5)),
-                                  child: currentAudioFile.picture,
-                                ),
-                        ),
-                        trailing: const Icon(
-                          Icons.more_vert_outlined,
-                          color: Color.fromARGB(255, 61, 46, 135),
-                          size: 25,
-                        ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) {
-                              return NowPlaying(
-                                audiofile: audiofiles[index],
-                              );
-                            }),
-                          );
-                        },
-                      ));
+    var audiofiles = ref.watch(audioFilesProvider);
+    return GestureDetector(
+      onTap: () {
+        FocusManager.instance.primaryFocus?.unfocus();
+      },
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+            backgroundColor: const Color.fromARGB(255, 235, 235, 235),
+            appBar: AppBar(
+                title: const Text("Mzika"),
+                centerTitle: false,
+                backgroundColor: const Color.fromARGB(255, 62, 43, 190),
+                actions: [
+                  CustomSearchBar(),
+                  PopupMenuButton(
+                    onSelected: (var choice) async {
+                      if (choice == "Clear database") {
+                        await ref
+                            .read(databaseProvider.notifier)
+                            .eraseDatabase();
+                        setState(() {
+                          pendingFinished = updateDb();
+                        });
+                        Fluttertoast.showToast(
+                          msg: "Database cleared...",
+                          gravity: ToastGravity.BOTTOM,
+                        );
+                      }
                     },
-                  );
-                } else if (snapshot.hasError) {
-                  widget = Text("Error ${snapshot.error}");
-                }
-              } else if (snapshot.connectionState == ConnectionState.waiting) {
-                widget = Center(
-                    child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SpinKitCubeGrid(
-                      color: pendingAction == "Scanning storage..."
-                          ? const Color.fromARGB(255, 62, 43, 190)
-                          : Colors.orange,
-                      size: 20,
-                    ),
-                    const SizedBox(
-                      height: 25,
-                    ),
-                    Text(
-                      pendingAction,
-                      style: const TextStyle(fontSize: 15),
-                    )
-                  ],
-                ));
-              }
+                    padding: EdgeInsets.zero,
+                    itemBuilder: (BuildContext context) {
+                      return options.map((String choice) {
+                        return PopupMenuItem<String>(
+                          value: choice,
+                          child: Text(choice),
+                        );
+                      }).toList();
+                    },
+                  ),
+                ]),
+            body: FutureBuilder(
+              future: pendingFinished,
+              builder: (context, snapshot) {
+                Widget widget = const Text("");
 
-              return widget;
-            },
-          )),
+                if (snapshot.connectionState == ConnectionState.done) {
+                  if (snapshot.hasData) {
+                    widget = ListView.builder(
+                      itemCount: audiofiles.length,
+                      itemBuilder: (context, index) {
+                        AudioFile currentAudioFile = audiofiles[index];
+                        return Card(
+                            child: ListTile(
+                          subtitle: Column(
+                            children: [
+                              Align(
+                                alignment: Alignment.topLeft,
+                                child: Text(
+                                  currentAudioFile.artist == null
+                                      ? "Unknow Artist"
+                                      : currentAudioFile.artist!,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black),
+                                ),
+                              ),
+                              Text(
+                                currentAudioFile.path,
+                                maxLines: 1,
+                                style: const TextStyle(fontSize: 12),
+                              )
+                            ],
+                          ),
+                          title: Text(currentAudioFile.title == null
+                              ? currentAudioFile.path
+                                  .split('/')
+                                  .last
+                                  .split('.')
+                                  .first
+                              : currentAudioFile.title!),
+                          leading: Container(
+                            margin: const EdgeInsets.all(8),
+                            child: currentAudioFile.picture == null
+                                ? const Icon(
+                                    Icons.audiotrack_outlined,
+                                    color: Color.fromARGB(255, 62, 43, 190),
+                                    size: 35,
+                                  )
+                                : ClipRRect(
+                                    borderRadius: const BorderRadius.all(
+                                        Radius.circular(5)),
+                                    child: currentAudioFile.picture,
+                                  ),
+                          ),
+                          trailing: const Icon(
+                            Icons.more_vert_outlined,
+                            color: Color.fromARGB(255, 61, 46, 135),
+                            size: 25,
+                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) {
+                                return NowPlaying(
+                                  audiofile: audiofiles[index],
+                                );
+                              }),
+                            );
+                          },
+                        ));
+                      },
+                    );
+                  } else if (snapshot.hasError) {
+                    widget = Text("Error ${snapshot.error}");
+                  }
+                } else if (snapshot.connectionState ==
+                    ConnectionState.waiting) {
+                  widget = Center(
+                      child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SpinKitCubeGrid(
+                        color: pendingAction == "Scanning storage..."
+                            ? const Color.fromARGB(255, 62, 43, 190)
+                            : Colors.orange,
+                        size: 20,
+                      ),
+                      const SizedBox(
+                        height: 25,
+                      ),
+                      Text(
+                        pendingAction,
+                        style: const TextStyle(fontSize: 15),
+                      )
+                    ],
+                  ));
+                }
+
+                return widget;
+              },
+            )),
+      ),
     );
   }
 }

@@ -1,37 +1,41 @@
-import 'package:metadata_god/metadata_god.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:mzika/controller/providers/audio_files_provider.dart';
+import 'package:mzika/controller/providers/database_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mzika/model/audio_file.dart';
 import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart';
 
-class CustomSearchBar extends StatefulWidget {
-  CustomSearchBar({super.key, required this.updateFunction, required this.db});
-
-  void Function(List<AudioFile>) updateFunction;
-  Database? db;
+class CustomSearchBar extends ConsumerStatefulWidget {
+  CustomSearchBar({super.key});
 
   @override
-  State<CustomSearchBar> createState() => _CustomSearchBarState();
+  ConsumerState<CustomSearchBar> createState() => _CustomSearchBarState();
 }
 
-class _CustomSearchBarState extends State<CustomSearchBar> {
+class _CustomSearchBarState extends ConsumerState<CustomSearchBar> {
   bool searchEnabled = false;
   TextEditingController textController = TextEditingController();
 
   Future<void> queryFiltered() async {
-    if (widget.db == null) {
+    var db = ref.read(databaseProvider);
+    if (db == null) {
       return;
     }
     if (textController.text == "") {
-      widget.updateFunction([]);
+      ref
+          .read(audioFilesProvider.notifier)
+          .setAudioFiles(ref.read(allAudioFilesProvider));
       return;
     }
-    var res = await widget.db!.query("audio_files",
+    var res = await db.query("audio_files",
         where: "title LIKE \"%${textController.text}%\"", limit: 100);
 
     if (res.isEmpty) {
-      Metadata meta = const Metadata();
-      AudioFile audio = AudioFile(path: "Not Found", metadata: meta);
-      widget.updateFunction([audio]);
+      ref.read(audioFilesProvider.notifier).setAudioFiles([]);
+      Fluttertoast.showToast(
+        msg: "No result found",
+        gravity: ToastGravity.BOTTOM,
+      );
       return;
     }
 
@@ -40,7 +44,9 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
       AudioFile audio = AudioFile.fromMap(map: file);
       files.add(audio);
     }
-    widget.updateFunction(files);
+    ref.read(audioFilesProvider.notifier).setAudioFiles(files);
+
+    FocusScope.of(context).unfocus();
   }
 
   @override

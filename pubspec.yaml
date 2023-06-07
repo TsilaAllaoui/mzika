@@ -24,6 +24,8 @@ dependencies:
   context_menus: ^1.0.2
   palette_generator: ^0.3.3+2
   flutter_riverpod: ^2.3.6
+  text_scroll: ^0.2.0
+  fluttertoast: ^8.2.2
 
 dev_dependencies:
   flutter_test:

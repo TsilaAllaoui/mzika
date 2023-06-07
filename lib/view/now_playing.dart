@@ -10,6 +10,7 @@ import 'package:mzika/view/preview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:palette_generator/palette_generator.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:text_scroll/text_scroll.dart';
 import 'package:flutter/material.dart';
 
 class NowPlaying extends ConsumerStatefulWidget {
@@ -130,13 +131,18 @@ class _NowPlayingState extends ConsumerState<NowPlaying> {
                             mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              TextScroll(
                                 audiofile!.title!,
-                                overflow: TextOverflow.fade,
+                                intervalSpaces: 10,
+                                velocity: const Velocity(
+                                    pixelsPerSecond: Offset(20, 0)),
+                                delayBefore: const Duration(seconds: 2),
+                                pauseBetween: const Duration(seconds: 3),
                                 style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 25,
-                                    color: Colors.black),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 25,
+                                  color: Colors.black,
+                                ),
                               ),
                               Text(
                                 audiofile!.artist!,
