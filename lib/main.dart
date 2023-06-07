@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mzika/view/categories.dart';
 import 'package:mzika/view/home.dart';
 
 void main() {
@@ -11,7 +12,7 @@ void main() {
   );
   runApp(
     const ProviderScope(
-      child: Home(),
+      child: Categories(),
     ),
   );
 }
