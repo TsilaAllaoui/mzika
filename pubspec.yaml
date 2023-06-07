@@ -26,7 +26,6 @@ dependencies:
   flutter_riverpod: ^2.3.6
   text_scroll: ^0.2.0
   fluttertoast: ^8.2.2
-  flutter_carousel_slider: ^1.1.0
 
 dev_dependencies:
   flutter_test:

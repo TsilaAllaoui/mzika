@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:flutter_carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -202,11 +201,11 @@ class _CategoriesState extends ConsumerState<Categories> {
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.done) {
                         if (snapshot.hasData) {
-                          List<Widget> cards = [];
+                          List<Widget> albumCards = [];
                           var albums = ref.read(categoriesProvider).albums;
                           if (albums.isNotEmpty) {
                             for (final album in albums) {
-                              cards.add(
+                              albumCards.add(
                                 CategoryCard(
                                   content: album.name,
                                   color: Colors.red,
@@ -215,15 +214,14 @@ class _CategoriesState extends ConsumerState<Categories> {
                               );
                             }
                           }
-
                           return SizedBox(
                             height: 300,
                             width: double.infinity,
                             child: PageView.builder(
                               controller: _controller,
-                              itemCount: cards.length,
+                              itemCount: albumCards.length,
                               itemBuilder: (context, index) {
-                                return cards[index];
+                                return albumCards[index];
                               },
                             ),
                           );
@@ -242,7 +240,62 @@ class _CategoriesState extends ConsumerState<Categories> {
                         );
                       }
                     },
-                  )
+                  ),
+                  Container(
+                      margin: const EdgeInsets.fromLTRB(15, 20, 10, 5),
+                      child: const Text(
+                        "Artists",
+                        style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 30,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
+                      )),
+                  FutureBuilder(
+                    future: getCategories(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        if (snapshot.hasData) {
+                          List<Widget> artistCards = [];
+                          var artists = ref.read(categoriesProvider).artists;
+                          if (artists.isNotEmpty) {
+                            for (final artist in artists) {
+                              artistCards.add(
+                                CategoryCard(
+                                  content: artist.name,
+                                  color: Colors.blue,
+                                  image: artist.image,
+                                ),
+                              );
+                            }
+                          }
+                          return SizedBox(
+                            height: 300,
+                            width: double.infinity,
+                            child: PageView.builder(
+                              controller: _controller,
+                              itemCount: artistCards.length,
+                              itemBuilder: (context, index) {
+                                return artistCards[index];
+                              },
+                            ),
+                          );
+                        } else {
+                          return const Text("");
+                        }
+                      } else {
+                        return const SizedBox(
+                          height: 300,
+                          child: Center(
+                            child: SpinKitCubeGrid(
+                              color: Colors.orange,
+                              size: 20,
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                  ),
                 ],
               ),
             )),

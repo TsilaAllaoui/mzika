@@ -14,12 +14,15 @@ class CardModel {
 class CategoriesModel {
   CategoriesModel(this.albums);
   List<CardModel> albums = [];
+  List<CardModel> artists = [];
+  List<CardModel> playlists = [];
 }
 
 class CategoryNotifier extends StateNotifier<CategoriesModel> {
   CategoryNotifier() : super(CategoriesModel([]));
 
   Future<bool> setCategories(Database db) async {
+    // Albums
     var res = await db.query("audio_files", distinct: true, columns: ["album"]);
     state.albums = [];
     for (dynamic album in res) {
@@ -32,6 +35,22 @@ class CategoryNotifier extends StateNotifier<CategoriesModel> {
       }
       state.albums.add(CardModel(album["album"], image!));
     }
+
+    // Artist
+    var res_ =
+        await db.query("audio_files", distinct: true, columns: ["artist"]);
+    state.artists = [];
+    for (dynamic artist in res_) {
+      var sample = await db.query("audio_files",
+          where: "artist == \"${artist['artist']}\"", limit: 1);
+      AudioFile file = AudioFile.fromMap(map: sample.toList().first);
+      Image? image = file.picture;
+      if (file.picture == null) {
+        image = Image.network("");
+      }
+      state.artists.add(CardModel(artist["artist"], image!));
+    }
+
     return true;
   }
 }
