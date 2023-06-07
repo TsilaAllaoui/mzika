@@ -11,7 +11,7 @@ class Preview extends StatelessWidget {
       return Container(
         margin: const EdgeInsets.fromLTRB(0, 25, 0, 0),
         width: MediaQuery.of(context).size.width - 20,
-        height: MediaQuery.of(context).size.height * 0.45,
+        height: MediaQuery.of(context).size.height / 2,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(25),
@@ -29,9 +29,9 @@ class Preview extends StatelessWidget {
           borderRadius: const BorderRadius.all(Radius.circular(15)),
           child: SizedBox(
               height: MediaQuery.of(context).size.height / 2,
-              width: MediaQuery.of(context).size.width - 10,
+              width: MediaQuery.of(context).size.width,
               child: Image(
-                fit: BoxFit.cover,
+                fit: BoxFit.fill,
                 image: pochette!.image,
               )),
         ),

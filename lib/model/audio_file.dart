@@ -19,6 +19,7 @@ class AudioFile {
   String? genre;
   Image? picture;
   int? fileSize;
+  bool favorite = false;
 
   AudioFile({required this.path, required this.metadata}) {
     title = metadata.title ?? "";

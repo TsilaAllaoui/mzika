@@ -41,14 +41,14 @@ class _SeekBarState extends ConsumerState<SeekBar> {
         ),
         Expanded(
           child: Slider(
-            value: ref.watch(positionChangesProvider),
+            value: currentDuration.toDouble(),
             min: 0,
             max: totalDuration.toDouble(),
             onChanged: (double value) {
-              var p = ref.watch(playerProvider);
+              var p = ref.watch(playerProvider).player!;
               p.seek(Duration(seconds: value.toInt()));
             },
-            activeColor: ref.read(mainPaletteProvider).colors.toList()[0],
+            activeColor: ref.read(mainPaletteProvider).colors.toList().last,
           ),
         ),
         Text(

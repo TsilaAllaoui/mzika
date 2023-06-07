@@ -13,6 +13,48 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:text_scroll/text_scroll.dart';
 import 'package:flutter/material.dart';
 
+class FavIcon extends ConsumerStatefulWidget {
+  const FavIcon({super.key});
+
+  @override
+  ConsumerState<FavIcon> createState() => _FavIconState();
+}
+
+class _FavIconState extends ConsumerState<FavIcon> {
+  late bool fav;
+  Icon favIcon = const Icon(
+    Icons.favorite_border_rounded,
+    color: Colors.black,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    fav = ref.watch(playerProvider).file!.favorite;
+    return IconButton(
+      onPressed: () {
+        if (fav) {
+          setState(() {
+            favIcon = const Icon(
+              Icons.favorite_border_outlined,
+              color: Colors.black,
+            );
+          });
+        } else {
+          setState(() {
+            favIcon = const Icon(
+              Icons.favorite_outlined,
+              color: Colors.black,
+            );
+          });
+        }
+        ref.read(playerProvider.notifier).toggleFavorite();
+      },
+      icon: favIcon,
+      iconSize: 35,
+    );
+  }
+}
+
 class NowPlaying extends ConsumerStatefulWidget {
   NowPlaying({super.key, required this.audiofile});
 
@@ -81,6 +123,8 @@ class _NowPlayingState extends ConsumerState<NowPlaying> {
   @override
   Widget build(BuildContext context) {
     Future(() => {ref.read(playerProvider.notifier).setPlayer(player)});
+    Future(() => {ref.read(playerProvider.notifier).setFile(audiofile!)});
+
     return WillPopScope(
       onWillPop: () async {
         Navigator.of(context).pop();
@@ -127,29 +171,35 @@ class _NowPlayingState extends ConsumerState<NowPlaying> {
                       ),
                       SizedBox(
                         width: double.infinity,
-                        child: Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              TextScroll(
-                                audiofile!.title!,
-                                intervalSpaces: 10,
-                                velocity: const Velocity(
-                                    pixelsPerSecond: Offset(20, 0)),
-                                delayBefore: const Duration(seconds: 2),
-                                pauseBetween: const Duration(seconds: 3),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 25,
-                                  color: Colors.black,
-                                ),
-                              ),
-                              Text(
-                                audiofile!.artist!,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w600),
-                              ),
-                            ]),
+                        child: Row(
+                          children: [
+                            Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  TextScroll(
+                                    audiofile!.title!,
+                                    intervalSpaces: 10,
+                                    velocity: const Velocity(
+                                        pixelsPerSecond: Offset(20, 0)),
+                                    delayBefore: const Duration(seconds: 2),
+                                    pauseBetween: const Duration(seconds: 3),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 25,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  Text(
+                                    audiofile!.artist!,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                ]),
+                            const Spacer(),
+                            FavIcon(),
+                          ],
+                        ),
                       ),
                       const SizedBox(
                         height: 20,

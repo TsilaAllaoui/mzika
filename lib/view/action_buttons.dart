@@ -24,7 +24,7 @@ class _ActionButtonsState extends ConsumerState<ActionButtons> {
         IconButton(
           iconSize: 50,
           onPressed: () {
-            ref.read(playerProvider).seek(Duration.zero);
+            ref.read(playerProvider).player!.seek(Duration.zero);
           },
           icon: const Icon(
             Icons.skip_previous_rounded,
@@ -36,16 +36,17 @@ class _ActionButtonsState extends ConsumerState<ActionButtons> {
         IconButton(
           iconSize: 100,
           onPressed: () {
-            if (ref.read(playerProvider).state == PlayerState.playing) {
-              ref.read(playerProvider).pause();
+            if (ref.read(playerProvider).player!.state == PlayerState.playing) {
+              ref.read(playerProvider).player!.pause();
               setState(() {
                 middleIcon = const Icon(
                   Icons.play_arrow_rounded,
                   color: Colors.black,
                 );
               });
-            } else if (ref.read(playerProvider).state == PlayerState.paused) {
-              ref.read(playerProvider).resume();
+            } else if (ref.read(playerProvider).player!.state ==
+                PlayerState.paused) {
+              ref.read(playerProvider).player!.resume();
               setState(() {
                 middleIcon = const Icon(
                   Icons.pause,

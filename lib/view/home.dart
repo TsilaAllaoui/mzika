@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mzika/controller/providers/audio_files_provider.dart';
 import 'package:mzika/controller/providers/database_provider.dart';
+import 'package:mzika/controller/providers/player_provider.dart';
 import 'package:mzika/view/now_playing.dart';
 import 'package:mzika/view/search_bar.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -80,7 +81,8 @@ class _HomeState extends ConsumerState<Home> {
     ref.read(databaseProvider.notifier).setDatabase(db!);
 
     // If db already exist,skipping file rescanning...
-    if (await databaseFactory.databaseExists("${dbDir.path}/database.db")) {
+    var res = await db!.query("audio_files", limit: 1);
+    if (res.isEmpty) {
       var entries = await db!.query("audio_files", limit: 100);
       if (entries.isEmpty) {
         // Filtering by mp3 extension // TODO: add more audio extension support
@@ -149,13 +151,13 @@ class _HomeState extends ConsumerState<Home> {
   @override
   Widget build(BuildContext context) {
     var audiofiles = ref.watch(audioFilesProvider);
-    return GestureDetector(
-      onTap: () {
-        FocusManager.instance.primaryFocus?.unfocus();
-      },
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: Scaffold(
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: GestureDetector(
+        onTap: () {
+          FocusManager.instance.primaryFocus?.unfocus();
+        },
+        child: Scaffold(
             backgroundColor: const Color.fromARGB(255, 235, 235, 235),
             appBar: AppBar(
                 title: const Text("Mzika"),
